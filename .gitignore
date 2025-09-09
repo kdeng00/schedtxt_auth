@@ -1,1 +1,3 @@
 /textsender-auth
+.env
+/vendor
