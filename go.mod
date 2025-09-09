@@ -1,6 +1,6 @@
 module git.kundeng.us/phoenix/textsender-auth
 
-go 1.24.5
+go 1.25.1
 
 require (
 	github.com/go-chi/chi/v5 v5.2.3
