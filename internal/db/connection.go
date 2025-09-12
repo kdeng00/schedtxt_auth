@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -82,7 +83,13 @@ func (db *Database) ResetDatabase(ctx context.Context) error {
 
 	schemaContent, err := os.ReadFile("migrations/schema.sql")
 	if err != nil {
-		return fmt.Errorf("error reading schema file: %v", err)
+		log.Println("Default migrations not found. Checking different directory")
+		cwd, _ := os.Getwd()
+		migrationsPath := path.Join(cwd, "../..", "migrations/schema.sql")
+		schemaContent, err = os.ReadFile(migrationsPath)
+		if err != nil {
+			return fmt.Errorf("error reading schema file: %v", err)
+		}
 	}
 
 	statements := strings.Split(string(schemaContent), ";")

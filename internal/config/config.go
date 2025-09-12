@@ -41,7 +41,7 @@ func Load() *Config {
 		log.Fatal("Error loading .env file")
 	}
 
-	unpackedConnString := unpackDBConnString()
+	unpackedConnString := UnpackDBConnString()
 	dbConnString := unpackedConnString.Parse()
 
 	return &Config{
@@ -51,7 +51,7 @@ func Load() *Config {
 	}
 }
 
-func unpackDBConnString() (connInfo ConnectionInfo) {
+func UnpackDBConnString() (connInfo ConnectionInfo) {
 	username := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")
 	host := os.Getenv("DB_HOST")

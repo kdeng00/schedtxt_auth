@@ -21,7 +21,7 @@ type UserStore interface {
 	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
 	GetUserByUsername(ctx context.Context, username string) (*User, error)
 	GetAllUsers(ctx context.Context) ([]*User, error)
-	UserExists(ctx context.Context, email string) (bool, error)
+	UserExists(ctx context.Context, username string) (bool, error)
 }
 
 type PGUserStore struct {

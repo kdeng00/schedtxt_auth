@@ -11,10 +11,10 @@ jobs:
     runs-on: ubuntu-24.04  # You can change this to macos-latest or windows-latest if needed
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v3
+      uses: actions/setup-go@v4
       with:
         go-version: '1.25.1' # You can specify a specific version or 'stable'
 
@@ -25,9 +25,52 @@ jobs:
          -X main.commit=${{ github.sha }} \
          -X main.date=$(date +%Y-%m-%dT%H:%M:%S%z)" \
          -o textsender-auth cmd/api/main.go
+  test:
+    name: Test
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.5
+        env:
+          POSTGRES_USER: ${{ secrets.DB_TEST_USER }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
+          POSTGRES_DB: ${{ secrets.DB_TEST_NAME }}
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Test
-      run: go test -v ./...
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.25.1'
+
+      - name: Run tests
+        env:
+          DB_NAME: ${{ secrets.DB_TEST_NAME }}
+          DB_USER: ${{ secrets.DB_TEST_USER }}
+          DB_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
+          DB_HOST: postgres
+          DB_PORT: 5432
+          DB_SSLMODE: disable
+        run: |
+          echo "Parent directory"
+          echo `pwd`
+
+          echo "DB_NAME=$DB_NAME" > .env
+          echo "DB_USER=$DB_USER" >> .env
+          echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+          echo "DB_HOST=$DB_HOST" >> .env
+          echo "DB_PORT=$DB_PORT" >> .env
+          echo "DB_SSLMODE=$DB_SSLMODE" >> .env
+
+          go test -v ./...
 
 #    - name: Run gofmt (optional)
       # Uncomment to check code formatting with gofmt
