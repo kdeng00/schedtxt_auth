@@ -51,6 +51,10 @@ func Load() *Config {
 	}
 }
 
+func GetSecretKey() string {
+	return os.Getenv("SECRET_KEY")
+}
+
 func UnpackDBConnString() (connInfo ConnectionInfo) {
 	username := os.Getenv("DB_USER")
 	password := os.Getenv("DB_PASSWORD")

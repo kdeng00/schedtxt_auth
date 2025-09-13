@@ -46,6 +46,7 @@ func main() {
 	// Services
 	userStore := model.NewUserStore(db.Pool)
 	userHandler := handler.NewUserHandler(userStore)
+	loginHandler := handler.NewLoginHandler(userStore)
 
 	router := chi.NewRouter()
 
@@ -55,6 +56,7 @@ func main() {
 	router.Use(mdleware.JSONContentType)
 
 	router.Post(endpoint.Register, userHandler.Register)
+	router.Post(endpoint.Login, loginHandler.Login)
 
 	// Start server
 	server := &http.Server{

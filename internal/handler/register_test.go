@@ -8,18 +8,17 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"git.kundeng.us/phoenix/textsender-auth/internal/db"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
-
-	"github.com/stretchr/testify/assert"
 )
 
 func TestCreateUserWithMock(t *testing.T) {
 	mockstore := NewMockUserStore()
 	handler := NewUserHandler(mockstore)
 
-	testUser := model.User{Username: "ghost", PhoneNumber: "+1234567890", Password: "dfgdffddfd"}
+	testUser := GetTestUser()
 	jsonValue, _ := json.Marshal(testUser)
 
 	req, _ := http.NewRequest("POST", endpoint.Register, strings.NewReader(string(jsonValue)))

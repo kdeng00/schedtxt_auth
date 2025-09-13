@@ -1,11 +1,9 @@
 package handler
 
-import "net/http"
-import "encoding/json"
-import "fmt"
-
 import (
+	"fmt"
 	"github.com/google/uuid"
+	"net/http"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
@@ -42,13 +40,16 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := extractUserFromReq(r)
+	var req RegisterUser
+	err := ExtractFromRequest(r, &req)
 	if err != nil {
 		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	defer r.Body.Close()
+
+	user := model.User{Username: req.Username, Password: req.Password, PhoneNumber: req.PhoneNumber}
 
 	var statusCode int
 	resp := RegisterResponse{}
@@ -69,7 +70,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		statusCode = http.StatusBadRequest
 		resp.Message = "Failure in creating User"
 	} else {
-		hashing := utility.HashMash{user.Password}
+		hashing := utility.HashMash{Password: user.Password}
 		hashedPassword, err := hashing.HashPassword()
 		if err != nil {
 			statusCode = http.StatusInternalServerError
@@ -88,21 +89,5 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	respondWithJson(w, statusCode, &resp)
-}
-
-func extractUserFromReq(r *http.Request) (user model.User, myError error) {
-	var usr RegisterUser
-	err := json.NewDecoder(r.Body).Decode(&usr)
-	if err != nil {
-		return user, err
-	}
-
-	return model.User{PhoneNumber: usr.PhoneNumber, Username: usr.Username, Password: usr.Password}, nil
-}
-
-func respondWithJson(w http.ResponseWriter, statusCode int, data interface{}) {
-	w.Header().Set("Content-type", "application/json")
-	w.WriteHeader(statusCode)
-	json.NewEncoder(w).Encode(data)
+	RespondWithJson(w, statusCode, &resp)
 }

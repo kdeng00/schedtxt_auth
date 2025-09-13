@@ -51,6 +51,22 @@ jobs:
         with:
           go-version: '1.25.1'
 
+      - name: Install PostgreSQL client
+        run: sudo apt update && sudo apt-get install -y postgresql-client
+
+      - name: Wait for PostgreSQL to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h postgres -p 5432; then
+              echo "PostgreSQL is ready"
+              exit 0
+            fi
+            echo "Waiting for PostgreSQL... Attempt $i"
+            sleep 2
+          done
+          echo "PostgreSQL did not start in time"
+          exit 1
+
       - name: Run tests
         env:
           DB_NAME: ${{ secrets.DB_TEST_NAME }}
