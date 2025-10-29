@@ -10,7 +10,7 @@ file, update the database keys. The `SECRET_KEY` is used for token generation.
 
 ### Building api
 ```
-go build -o textsender-auth cmd/api/main.go
+make build
 ```
 
 
