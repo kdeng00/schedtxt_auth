@@ -30,7 +30,7 @@ func main() {
 		fmt.Println(version.String())
 		return
 	}
-	fmt.Println("textsender-auth")
+	fmt.Println(config.App_Name)
 
 	cfg := config.Load()
 

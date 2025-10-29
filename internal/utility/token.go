@@ -5,8 +5,12 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 
+	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 )
+
+const ROLE_TYPE = "regular"
+const TOKEN_TYPE = "Bearer"
 
 type TokenGenerator struct {
 	SecretKey []byte
@@ -17,24 +21,26 @@ func (t *TokenGenerator) SetSecretKey(secretKey string) {
 }
 
 func (t *TokenGenerator) GenerateToken(user model.User) (*model.Login, error) {
-	claims := t.generateClaims(user, "regular")
+	issuedAt := time.Now()
+	expirationTime := time.Now().Add(4 * time.Hour)
+	claims := t.generateClaims(user, TOKEN_TYPE, issuedAt, expirationTime)
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	if tokenString, err := token.SignedString(t.SecretKey); err != nil {
 		return nil, err
 	} else {
-		return &model.Login{AccessToken: tokenString}, nil
+		return &model.Login{AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
 	}
 }
 
-func (t *TokenGenerator) generateClaims(user model.User, role string) model.Claims {
+func (t *TokenGenerator) generateClaims(user model.User, role string, issuedAt time.Time, expiredAt time.Time) model.Claims {
 	return model.Claims{
 		UserId: user.Id.String(),
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "textsender-auth",
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
-			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    config.App_Name,
+			ExpiresAt: jwt.NewNumericDate(expiredAt),
+			IssuedAt:  jwt.NewNumericDate(issuedAt),
 		},
 	}
 }

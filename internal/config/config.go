@@ -27,6 +27,8 @@ type ConnectionInfo struct {
 
 const Port = "9080"
 
+const App_Name = "textsender_auth"
+
 func (ci ConnectionInfo) Parse() string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", ci.Username, ci.Password, ci.Host, ci.Port, ci.Database, ci.SslMode)
 }
