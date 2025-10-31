@@ -7,6 +7,7 @@ import (
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
+	textmod "git.kundeng.us/phoenix/textsender-models"
 )
 
 const ROLE_TYPE = "regular"
@@ -20,7 +21,7 @@ func (t *TokenGenerator) SetSecretKey(secretKey string) {
 	t.SecretKey = []byte(secretKey)
 }
 
-func (t *TokenGenerator) GenerateToken(user model.User) (*model.Login, error) {
+func (t *TokenGenerator) GenerateToken(user model.User) (*textmod.token.Login, error) {
 	issuedAt := time.Now()
 	expirationTime := time.Now().Add(4 * time.Hour)
 	claims := t.generateClaims(user, TOKEN_TYPE, issuedAt, expirationTime)
@@ -29,12 +30,12 @@ func (t *TokenGenerator) GenerateToken(user model.User) (*model.Login, error) {
 	if tokenString, err := token.SignedString(t.SecretKey); err != nil {
 		return nil, err
 	} else {
-		return &model.Login{AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
+		return &token.Login{AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
 	}
 }
 
-func (t *TokenGenerator) generateClaims(user model.User, role string, issuedAt time.Time, expiredAt time.Time) model.Claims {
-	return model.Claims{
+func (t *TokenGenerator) generateClaims(user model.User, role string, issuedAt time.Time, expiredAt time.Time) textmod.token.Claims {
+	return textmod.token.Claims{
 		UserId: user.Id.String(),
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
