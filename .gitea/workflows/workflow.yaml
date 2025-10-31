@@ -23,7 +23,7 @@ jobs:
         mkdir -p ~/.ssh
         echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender_models_deploy_key
         chmod 600 ~/.ssh/textsender_models_deploy_key
-        ssh-keyscan ${{ vars.MYHOST }} >> ~/.ssh/known_hosts
+        ssh-keyscan ${{ vars.MY_HOST }} >> ~/.ssh/known_hosts
  
         eval $(ssh-agent -s)
         ssh-add -v ~/.ssh/textsender_models_deploy_key
