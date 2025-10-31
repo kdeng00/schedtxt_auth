@@ -6,8 +6,8 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
-	textmod "git.kundeng.us/phoenix/textsender-models"
+	intmodels "git.kundeng.us/phoenix/textsender-auth/internal/model"
+	"git.kundeng.us/phoenix/textsender-models"
 )
 
 const ROLE_TYPE = "regular"
@@ -21,7 +21,7 @@ func (t *TokenGenerator) SetSecretKey(secretKey string) {
 	t.SecretKey = []byte(secretKey)
 }
 
-func (t *TokenGenerator) GenerateToken(user model.User) (*textmod.token.Login, error) {
+func (t *TokenGenerator) GenerateToken(user intmodels.User) (*models.token.Login, error) {
 	issuedAt := time.Now()
 	expirationTime := time.Now().Add(4 * time.Hour)
 	claims := t.generateClaims(user, TOKEN_TYPE, issuedAt, expirationTime)
@@ -30,11 +30,11 @@ func (t *TokenGenerator) GenerateToken(user model.User) (*textmod.token.Login, e
 	if tokenString, err := token.SignedString(t.SecretKey); err != nil {
 		return nil, err
 	} else {
-		return &token.Login{AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
+		return &models.token..Login{AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
 	}
 }
 
-func (t *TokenGenerator) generateClaims(user model.User, role string, issuedAt time.Time, expiredAt time.Time) textmod.token.Claims {
+func (t *TokenGenerator) generateClaims(user intmodels.User, role string, issuedAt time.Time, expiredAt time.Time) models.token.Claims {
 	return textmod.token.Claims{
 		UserId: user.Id.String(),
 		Role:   role,
