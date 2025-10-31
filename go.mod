@@ -11,6 +11,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/crypto v0.42.0
+	git.kundeng.us/phoenix/textsender-models v0.0.1-main-a4317b4b22-556
 )
 
 require (
