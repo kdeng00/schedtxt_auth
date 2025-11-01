@@ -8,6 +8,8 @@ import (
 	"strconv"
 
 	"github.com/joho/godotenv"
+
+	"git.kundeng.us/phoenix/textsender-auth/internal/version"
 )
 
 type Config struct {
@@ -33,10 +35,21 @@ func (ci ConnectionInfo) Parse() string {
 	return fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=%s", ci.Username, ci.Password, ci.Host, ci.Port, ci.Database, ci.SslMode)
 }
 
+func PrintName() {
+	fmt.Println(App_Name)
+	fmt.Println(version.String())
+}
+
 func Load() *Config {
+	versionFlag := flag.Bool("version", false, "Print version information")
 	resetDb := flag.Bool("reset-db", false, "Reset the database schema and exit")
 	port := flag.String("port", Port, "Server port")
 	flag.Parse()
+
+	if *versionFlag {
+		fmt.Println(version.String())
+		os.Exit(-1)
+	}
 
 	err := godotenv.Load()
 	if err != nil {

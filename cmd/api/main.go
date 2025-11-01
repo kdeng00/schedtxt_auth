@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,19 +19,14 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
 	mdleware "git.kundeng.us/phoenix/textsender-auth/internal/middleware"
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
-	"git.kundeng.us/phoenix/textsender-auth/internal/version"
 )
 
 func main() {
-	versionFlag := flag.Bool("version", false, "Print version information")
-	flag.Parse()
-	if *versionFlag {
-		fmt.Println(version.String())
-		return
-	}
-	fmt.Println(config.App_Name)
-
 	cfg := config.Load()
+	if cfg == nil {
+		fmt.Println("Error initializing config")
+		os.Exit(-1)
+	}
 
 	db, err := db.NewDatabase(cfg.GetDBConnString())
 	if err != nil {
