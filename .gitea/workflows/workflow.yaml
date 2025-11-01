@@ -31,12 +31,12 @@ jobs:
 
         go env -w GOPRIVATE='${{ secrets.GIT_HOST_ROOT }}'
 
-        echo "Creating local .gitconfig"
-        touch ~/.gitconfig
-        cat > ~/.gitconfig << "EOF"
-        [url "ssh://git@${{ secreats.GIT_HOST_ROOT }}"]
-          insteadOf = https://${{ secrets.GIT_HOST_ROOT }}
-        EOF
+#         echo "Creating local .gitconfig"
+#         touch ~/.gitconfig
+#         cat > ~/.gitconfig << "EOF"
+#           [url "ssh://git@${{ secreats.GIT_HOST_ROOT }}"]
+#           insteadOf = https://${{ secrets.GIT_HOST_ROOT }}
+#         EOF
 
         echo "Building binary"
         make build
