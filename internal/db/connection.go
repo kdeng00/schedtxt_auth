@@ -45,7 +45,6 @@ func NewDatabase(connString string) (*Database, error) {
 	}
 
 	// Test the connection with a short timeout
-
 	if err := pool.Ping(ctx); err != nil {
 		pool.Close()
 		return nil, fmt.Errorf("unable to ping database: %v", err)
@@ -92,9 +91,7 @@ func (db *Database) ResetDatabase(ctx context.Context) error {
 		}
 	}
 
-	statements := strings.Split(string(schemaContent), ";")
-
-	for _, stmt := range statements {
+	for _, stmt := range strings.Split(string(schemaContent), ";") {
 		stmt = strings.TrimSpace(stmt)
 		if stmt == "" {
 			continue

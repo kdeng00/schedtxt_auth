@@ -11,14 +11,6 @@ import (
 	"git.kundeng.us/phoenix/textsender-models/pkg/user"
 )
 
-/*
-type User struct {
-	Id          uuid.UUID `json:"id"`
-	PhoneNumber string    `json:"phone_number"`
-	Username    string    `json:"username"`
-	Password    string    `json:"password"`
-}
-*/
 
 type UserStore interface {
 	CreateUser(ctx context.Context, user *user.User) error

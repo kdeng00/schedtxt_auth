@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	// "github.com/google/uuid"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	"git.kundeng.us/phoenix/textsender-models/pkg/token"
@@ -37,7 +36,6 @@ func (t *TokenGenerator) GenerateToken(user user.User) (*token.Login, error) {
 
 func (t *TokenGenerator) generateClaims(user user.User, role string, issuedAt time.Time, expiredAt time.Time) token.Claims {
 	return token.Claims{
-		// UserId: user.Id.String(),
 		UserId: user.Id,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
