@@ -7,6 +7,7 @@ import (
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
+	"git.kundeng.us/phoenix/textsender-models/pkg/user"
 )
 
 type RegisterUser struct {
@@ -49,7 +50,7 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	user := model.User{Username: req.Username, Password: req.Password, PhoneNumber: req.PhoneNumber}
+	user := user.User{Username: req.Username, Password: req.Password, PhoneNumber: req.PhoneNumber}
 
 	var statusCode int
 	resp := RegisterResponse{}

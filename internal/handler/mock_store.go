@@ -7,24 +7,24 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
+	"git.kundeng.us/phoenix/textsender-models/pkg/user"
 )
 
 type MockUserStore struct {
-	Users           map[uuid.UUID]*model.User
-	UsersByUsername map[string]*model.User
+	Users           map[uuid.UUID]*user.User
+	UsersByUsername map[string]*user.User
 	mu              sync.RWMutex
 	Error           error // Optional: simulate errors
 }
 
 func NewMockUserStore() *MockUserStore {
 	return &MockUserStore{
-		Users:           make(map[uuid.UUID]*model.User),
-		UsersByUsername: make(map[string]*model.User),
+		Users:           make(map[uuid.UUID]*user.User),
+		UsersByUsername: make(map[string]*user.User),
 	}
 }
 
-func (m *MockUserStore) CreateUser(ctx context.Context, user *model.User) error {
+func (m *MockUserStore) CreateUser(ctx context.Context, user *user.User) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -45,7 +45,7 @@ func (m *MockUserStore) CreateUser(ctx context.Context, user *model.User) error 
 	return nil
 }
 
-func (m *MockUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
+func (m *MockUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -65,7 +65,7 @@ func (m *MockUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*model.U
 	return user, nil
 }
 
-func (m *MockUserStore) GetUserByUsername(ctx context.Context, username string) (*model.User, error) {
+func (m *MockUserStore) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -81,7 +81,7 @@ func (m *MockUserStore) GetUserByUsername(ctx context.Context, username string) 
 	return user, nil
 }
 
-func (m *MockUserStore) GetAllUsers(ctx context.Context) ([]*model.User, error) {
+func (m *MockUserStore) GetAllUsers(ctx context.Context) ([]*user.User, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -89,7 +89,7 @@ func (m *MockUserStore) GetAllUsers(ctx context.Context) ([]*model.User, error) 
 		return nil, m.Error
 	}
 
-	users := make([]*model.User, 0, len(m.Users))
+	users := make([]*user.User, 0, len(m.Users))
 	for _, user := range m.Users {
 		users = append(users, user)
 	}

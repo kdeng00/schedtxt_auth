@@ -7,6 +7,7 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
+	"git.kundeng.us/phoenix/textsender-models/pkg/token"
 )
 
 type LoginAccount struct {
@@ -16,7 +17,7 @@ type LoginAccount struct {
 
 type LoginResponse struct {
 	Message string        `json:"message"`
-	Data    []model.Login `json:"data"`
+	Data    []token.Login `json:"data"`
 }
 
 type LoginHandler struct {
@@ -62,13 +63,13 @@ func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 					var tokGen utility.TokenGenerator
 					secretKey := config.GetSecretKey()
 					tokGen.SetSecretKey(secretKey)
-					if token, err := tokGen.GenerateToken(*user); err != nil {
+					if myToken, err := tokGen.GenerateToken(*user); err != nil {
 						fmt.Println(err.Error())
 						statusCode = http.StatusInternalServerError
 						resp.Message = "Error generating token"
 					} else {
 						statusCode = http.StatusOK
-						resp.Data = append(resp.Data, *token)
+						resp.Data = append(resp.Data, *myToken)
 						resp.Message = "Successful"
 					}
 				} else {

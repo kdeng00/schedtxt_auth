@@ -7,20 +7,24 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"git.kundeng.us/phoenix/textsender-models/pkg/user"
 )
 
+/*
 type User struct {
 	Id          uuid.UUID `json:"id"`
 	PhoneNumber string    `json:"phone_number"`
 	Username    string    `json:"username"`
 	Password    string    `json:"password"`
 }
+*/
 
 type UserStore interface {
-	CreateUser(ctx context.Context, user *User) error
-	GetUserByID(ctx context.Context, id uuid.UUID) (*User, error)
-	GetUserByUsername(ctx context.Context, username string) (*User, error)
-	GetAllUsers(ctx context.Context) ([]*User, error)
+	CreateUser(ctx context.Context, user *user.User) error
+	GetUserByID(ctx context.Context, id uuid.UUID) (*user.User, error)
+	GetUserByUsername(ctx context.Context, username string) (*user.User, error)
+	GetAllUsers(ctx context.Context) ([]*user.User, error)
 	UserExists(ctx context.Context, username string) (bool, error)
 }
 
@@ -32,7 +36,7 @@ func NewUserStore(db *pgxpool.Pool) *PGUserStore {
 	return &PGUserStore{db: db}
 }
 
-func (s *PGUserStore) CreateUser(ctx context.Context, user *User) error {
+func (s *PGUserStore) CreateUser(ctx context.Context, user *user.User) error {
 	query := `
 		INSERT INTO users (phone_number, username, password)
 		VALUES ($1, $2, $3)
@@ -44,10 +48,10 @@ func (s *PGUserStore) CreateUser(ctx context.Context, user *User) error {
 	)
 }
 
-func (s *PGUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*User, error) {
+func (s *PGUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
 	query := `SELECT id, username, password, phone_number FROM users WHERE id = $1`
 
-	var user User
+	var user user.User
 	err := s.db.QueryRow(ctx, query, id).Scan(
 		&user.Id, &user.Username, &user.Password, &user.PhoneNumber,
 	)
@@ -62,10 +66,10 @@ func (s *PGUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*User, err
 	return &user, nil
 }
 
-func (s *PGUserStore) GetUserByUsername(ctx context.Context, username string) (*User, error) {
+func (s *PGUserStore) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
 	query := `SELECT id, username, password, phone_number FROM users WHERE username = $1`
 
-	var user User
+	var user user.User
 	err := s.db.QueryRow(ctx, query, username).Scan(
 		&user.Id, &user.Username, &user.Password, &user.PhoneNumber,
 	)
@@ -80,7 +84,7 @@ func (s *PGUserStore) GetUserByUsername(ctx context.Context, username string) (*
 	return &user, nil
 }
 
-func (s *PGUserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
+func (s *PGUserStore) GetAllUsers(ctx context.Context) ([]*user.User, error) {
 	query := `SELECT id, username, password, phone_number FROM users`
 
 	rows, err := s.db.Query(ctx, query)
@@ -89,9 +93,9 @@ func (s *PGUserStore) GetAllUsers(ctx context.Context) ([]*User, error) {
 	}
 	defer rows.Close()
 
-	var users []*User
+	var users []*user.User
 	for rows.Next() {
-		var user User
+		var user user.User
 		if err := rows.Scan(
 			&user.Id, &user.Username, &user.Password, &user.PhoneNumber,
 		); err != nil {

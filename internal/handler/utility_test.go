@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
+	"git.kundeng.us/phoenix/textsender-models/pkg/user"
 )
 
-func GetTestUser() model.User {
-	return model.User{Username: "ghost", PhoneNumber: "+1234567890", Password: "dfgdffddfd"}
+func GetTestUser() user.User {
+	return user.User{Username: "ghost", PhoneNumber: "+1234567890", Password: "dfgdffddfd"}
 }
