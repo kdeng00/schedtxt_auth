@@ -28,6 +28,15 @@ jobs:
         eval $(ssh-agent -s)
         ssh-add -v ~/.ssh/textsender_models_deploy_key
 
+        go env -w GOPRIVATE='${{ secrets.GIT_HOST_ROOT }}'
+
+        cat > ~/.gitconfig << "EOF"
+        [url "ssh://git@${{ secreats.GIT_HOST_ROOT }}"]
+          insteadOf = https://${{ secrets.GIT_HOST_ROOT }}
+        EOF
+
+        cat ~/.gitconfig
+
         make build
 
   test:
