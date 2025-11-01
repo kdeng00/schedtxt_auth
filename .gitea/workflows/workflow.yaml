@@ -20,6 +20,7 @@ jobs:
 
     - name: Build
       run: |
+        echo "Initializing config"
         mkdir -p ~/.ssh
         echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender_models_deploy_key
         chmod 600 ~/.ssh/textsender_models_deploy_key
@@ -30,13 +31,14 @@ jobs:
 
         go env -w GOPRIVATE='${{ secrets.GIT_HOST_ROOT }}'
 
+        echo "Creating local .gitconfig"
+        touch ~/.gitconfig
         cat > ~/.gitconfig << "EOF"
         [url "ssh://git@${{ secreats.GIT_HOST_ROOT }}"]
           insteadOf = https://${{ secrets.GIT_HOST_ROOT }}
         EOF
 
-        cat ~/.gitconfig
-
+        echo "Building binary"
         make build
 
   test:
