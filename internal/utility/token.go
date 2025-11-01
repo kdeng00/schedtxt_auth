@@ -7,7 +7,7 @@ import (
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	intmodels "git.kundeng.us/phoenix/textsender-auth/internal/model"
-	// "git.kundeng.us/phoenix/textsender-models"
+	"git.kundeng.us/phoenix/textsender-models"
 )
 
 const ROLE_TYPE = "regular"
@@ -34,8 +34,8 @@ func (t *TokenGenerator) GenerateToken(user intmodels.User) (*intmodels.Login, e
 	}
 }
 
-func (t *TokenGenerator) generateClaims(user intmodels.User, role string, issuedAt time.Time, expiredAt time.Time) intmodels.Claims {
-	return intmodels.Claims{
+func (t *TokenGenerator) generateClaims(user intmodels.User, role string, issuedAt time.Time, expiredAt time.Time) models.token.Claims {
+	return models.token.Claims{
 		UserId: user.Id.String(),
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
