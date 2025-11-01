@@ -4,10 +4,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	intmodels "git.kundeng.us/phoenix/textsender-auth/internal/model"
-	"git.kundeng.us/phoenix/textsender-models"
+	"git.kundeng.us/phoenix/textsender-models/pkg/token"
 )
 
 const ROLE_TYPE = "regular"
@@ -34,9 +35,10 @@ func (t *TokenGenerator) GenerateToken(user intmodels.User) (*intmodels.Login, e
 	}
 }
 
-func (t *TokenGenerator) generateClaims(user intmodels.User, role string, issuedAt time.Time, expiredAt time.Time) models.token.Claims {
-	return models.token.Claims{
-		UserId: user.Id.String(),
+func (t *TokenGenerator) generateClaims(user intmodels.User, role string, issuedAt time.Time, expiredAt time.Time) token.Claims {
+	return token.Claims{
+		// UserId: user.Id.String(),
+		UserId: uuid.New(),
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    config.App_Name,
