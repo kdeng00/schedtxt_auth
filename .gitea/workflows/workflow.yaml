@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-24.04
     services:
       postgres:
-        image: postgres:17.5
+        image: postgres:18.0
         env:
           POSTGRES_USER: ${{ secrets.DB_TEST_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
@@ -94,10 +94,12 @@ jobs:
           DB_HOST: postgres
           DB_PORT: 5432
           DB_SSLMODE: disable
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
           echo "Parent directory"
           echo `pwd`
 
+          echo "SECRET_KEY=$SECRET_KEY" >> .env
           echo "DB_NAME=$DB_NAME" > .env
           echo "DB_USER=$DB_USER" >> .env
           echo "DB_PASSWORD=$DB_PASSWORD" >> .env
