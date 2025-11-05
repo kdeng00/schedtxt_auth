@@ -1,0 +1,9 @@
+vendor/
+
+# Ignore git directory
+.git/
+
+.gitea/
+
+# Ignore environment files (configure via docker-compose instead)
+.env*

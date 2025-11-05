@@ -54,6 +54,25 @@ func NewDatabase(connString string) (*Database, error) {
 	return &Database{Pool: pool}, nil
 }
 
+func TableExists(ctx context.Context, conn *pgxpool.Pool, tableName string) (bool, error) {
+	var exists bool
+
+	query := `
+        SELECT EXISTS (
+            SELECT FROM information_schema.tables
+            WHERE table_schema = 'public'
+            AND table_name = $1
+        );
+    `
+
+	err := conn.QueryRow(ctx, query, tableName).Scan(&exists)
+	if err != nil {
+		return false, fmt.Errorf("error checking if table exists: %w", err)
+	}
+
+	return exists, nil
+}
+
 func (db *Database) Close() {
 	if db.Pool != nil {
 		db.Pool.Close()

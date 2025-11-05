@@ -14,7 +14,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
-	"git.kundeng.us/phoenix/textsender-auth/internal/db"
+	database "git.kundeng.us/phoenix/textsender-auth/internal/db"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
 	mdleware "git.kundeng.us/phoenix/textsender-auth/internal/middleware"
@@ -28,7 +28,7 @@ func main() {
 		os.Exit(-1)
 	}
 
-	db, err := db.NewDatabase(cfg.GetDBConnString())
+	db, err := database.NewDatabase(cfg.GetDBConnString())
 	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
@@ -43,6 +43,13 @@ func main() {
 		}
 		log.Println("Database reset completed. Exiting.")
 		return
+	} else {
+		if exists, err := database.TableExists(ctx, db.Pool, "users"); err == nil && !exists {
+			fmt.Println("Resetting database")
+			err = db.ResetDatabase(ctx)
+		} else {
+			fmt.Println(err.Error())
+		}
 	}
 
 	// Services
