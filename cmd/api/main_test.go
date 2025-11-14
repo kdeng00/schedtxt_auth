@@ -39,9 +39,11 @@ func TestMain(m *testing.M) {
 
 	userStore := model.NewUserStore(db.Pool)
 	userHandler := handler.NewUserHandler(userStore)
+	loginHandler := handler.NewLoginHandler(userStore)
 
 	testRouter = mux.NewRouter()
 	testRouter.HandleFunc(endpoint.Register, userHandler.Register).Methods("POST")
+	testRouter.HandleFunc(endpoint.Login, loginHandler.Login).Methods("POST")
 
 	code := m.Run()
 	os.Exit(code)

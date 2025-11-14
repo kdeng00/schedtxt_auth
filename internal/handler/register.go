@@ -2,12 +2,13 @@ package handler
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
+
+	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"github.com/google/uuid"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
 )
 
 type RegisterUser struct {
@@ -35,12 +36,7 @@ func NewUserHandler(userStore model.UserStore) *UserHandler {
 	return &UserHandler{UserStore: userStore}
 }
 
-func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
+func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterUser
 	err := ExtractFromRequest(r, &req)
 	if err != nil {
@@ -50,44 +46,42 @@ func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	defer r.Body.Close()
 
-	user := user.User{Username: req.Username, Password: req.Password, PhoneNumber: req.PhoneNumber}
-
 	var statusCode int
-	resp := RegisterResponse{}
+	var resp RegisterResponse
+	user := user.User{Username: req.Username, Password: req.Password, PhoneNumber: req.PhoneNumber}
 
 	fmt.Println("Username:", user.Username)
 
 	ctx := r.Context()
 
-	exists, err := h.UserStore.UserExists(ctx, user.Username)
-	if err != nil {
+	if exists, err := u.UserStore.UserExists(ctx, user.Username); err != nil {
 		fmt.Printf("Error: %v", err)
 		statusCode = http.StatusInternalServerError
 		resp.Message = err.Error()
-	}
-
-	if exists {
-		// User already exists
-		statusCode = http.StatusBadRequest
-		resp.Message = "Failure in creating User"
 	} else {
-		hashing := utility.HashMash{Password: user.Password}
-		hashedPassword, err := hashing.HashPassword()
-		if err != nil {
-			statusCode = http.StatusInternalServerError
-			resp.Message = err.Error()
+		if exists {
+			// User already exists
+			statusCode = http.StatusBadRequest
+			resp.Message = "Failure in creating User"
 		} else {
-			user.Password = hashedPassword
-			err := h.UserStore.CreateUser(ctx, &user)
-			if err != nil {
+			hashing := utility.HashMash{Password: user.Password}
+			if hashedPassword, err := hashing.HashPassword(); err != nil {
 				statusCode = http.StatusInternalServerError
 				resp.Message = err.Error()
 			} else {
-				resp.Message = "Successful"
-				statusCode = http.StatusOK
-				resp.Data = append(resp.Data, RegisterResponseItem{Id: user.Id, PhoneNumber: user.PhoneNumber, Username: user.Username})
+				user.Password = hashedPassword
+				err := u.UserStore.CreateUser(ctx, &user)
+				if err != nil {
+					statusCode = http.StatusInternalServerError
+					resp.Message = err.Error()
+				} else {
+					resp.Message = "Successful"
+					statusCode = http.StatusOK
+					resp.Data = append(resp.Data, RegisterResponseItem{Id: user.Id, PhoneNumber: user.PhoneNumber, Username: user.Username})
+				}
 			}
 		}
+
 	}
 
 	RespondWithJson(w, statusCode, &resp)

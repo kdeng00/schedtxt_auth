@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
+	"git.kundeng.us/phoenix/textsender-models/pkg/token"
+
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
-	"git.kundeng.us/phoenix/textsender-models/pkg/token"
 )
 
 type LoginAccount struct {
@@ -29,11 +30,6 @@ func NewLoginHandler(userStore model.UserStore) *LoginHandler {
 }
 
 func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
-		return
-	}
-
 	var req LoginAccount
 	if err := ExtractFromRequest(r, &req); err != nil {
 		http.Error(w, "Invalid JSON: "+err.Error(), http.StatusBadRequest)

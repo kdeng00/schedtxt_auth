@@ -37,18 +37,24 @@ func main() {
 	ctx := context.Background()
 
 	if cfg.ResetDB {
-		log.Println("Resetting database")
 		if err := db.ResetDatabase(ctx); err != nil {
 			log.Fatalf("Failed to reset database: %v", err)
+		} else {
+			log.Println("Resetting database")
+			log.Println("Database reset completed. Exiting.")
 		}
-		log.Println("Database reset completed. Exiting.")
 		return
 	} else {
-		if exists, err := database.TableExists(ctx, db.Pool, "users"); err == nil && !exists {
-			fmt.Println("Resetting database")
-			err = db.ResetDatabase(ctx)
+		if exists, err := database.TableExists(ctx, db.Pool, "users"); err == nil {
+			if !exists {
+				if err = db.ResetDatabase(ctx); err != nil {
+					fmt.Println("Error:", err)
+				} else {
+					fmt.Println("Database reset")
+				}
+			}
 		} else {
-			fmt.Println(err.Error())
+			fmt.Println("Error:", err)
 		}
 	}
 
@@ -64,8 +70,8 @@ func main() {
 	router.Use(middleware.Timeout(60 * time.Second))
 	router.Use(mdleware.JSONContentType)
 
-	router.Post(endpoint.Register, userHandler.Register)
-	router.Post(endpoint.Login, loginHandler.Login)
+	router.Method("Post", endpoint.Register, http.HandlerFunc(userHandler.Register))
+	router.Method("Post", endpoint.Login, http.HandlerFunc(loginHandler.Login))
 
 	// Start server
 	server := &http.Server{

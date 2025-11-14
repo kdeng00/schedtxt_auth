@@ -107,8 +107,8 @@ func (m *MockUserStore) UserExists(ctx context.Context, username string) (bool, 
 
 	_, exists := m.UsersByUsername[username]
 	if !exists {
-		return exists, errors.New("User not found")
+		return exists, nil
+	} else {
+		return exists, nil
 	}
-
-	return exists, nil
 }
