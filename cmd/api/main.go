@@ -12,7 +12,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/swaggo/http-swagger/v2"
 
+	_ "git.kundeng.us/phoenix/textsender-auth/docs"
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	database "git.kundeng.us/phoenix/textsender-auth/internal/db"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler"
@@ -21,6 +23,17 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 )
 
+// @title           textsender-auth
+// @version         1.0
+// @description     Auth API to send text messages
+
+// @host      localhost:9080
+// @BasePath  /api/v1
+
+// @securityDefinitions.apikey  BearerAuth
+// @in                          header
+// @name                        Authorization
+// @description                 JWT Bearer Token
 func main() {
 	cfg := config.Load()
 	if cfg == nil {
@@ -72,6 +85,10 @@ func main() {
 
 	router.Method("Post", endpoint.Register, http.HandlerFunc(userHandler.Register))
 	router.Method("Post", endpoint.Login, http.HandlerFunc(loginHandler.Login))
+
+	router.Method("GET", "/swagger/*", httpSwagger.Handler(
+		httpSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.Port)),
+	))
 
 	// Start server
 	server := &http.Server{

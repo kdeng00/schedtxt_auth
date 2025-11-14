@@ -36,6 +36,18 @@ func NewUserHandler(userStore model.UserStore) *UserHandler {
 	return &UserHandler{UserStore: userStore}
 }
 
+// Register godoc
+// @Summary      Register user
+// @Description  Create a user that can send texts (requires JWT)
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body      RegisterUser true  "Data to add user"
+// @Success      200  {object}  RegisterResponse
+// @Failure      400  {object}  RegisterResponse
+// @Failure      500  {object}  RegisterResponse
+// @Router       /register [post]
 func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 	var req RegisterUser
 	err := ExtractFromRequest(r, &req)

@@ -1,0 +1,132 @@
+basePath: /api/v1
+definitions:
+  handler.LoginAccount:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.LoginResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/token.Login'
+        type: array
+      message:
+        type: string
+    type: object
+  handler.RegisterResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/handler.RegisterResponseItem'
+        type: array
+      message:
+        type: string
+    type: object
+  handler.RegisterResponseItem:
+    properties:
+      id:
+        type: string
+      phone_number:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.RegisterUser:
+    properties:
+      password:
+        type: string
+      phone_number:
+        type: string
+      username:
+        type: string
+    type: object
+  token.Login:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      token_type:
+        type: string
+    type: object
+host: localhost:9080
+info:
+  contact: {}
+  description: Auth API to send text messages
+  title: textsender-auth
+  version: "1.0"
+paths:
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Login and be given an access token (requires JWT)
+      parameters:
+      - description: Data to obtain a token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.LoginAccount'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.LoginResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.LoginResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.LoginResponse'
+      security:
+      - BearerAuth: []
+      summary: Login
+      tags:
+      - users
+  /register:
+    post:
+      consumes:
+      - application/json
+      description: Create a user that can send texts (requires JWT)
+      parameters:
+      - description: Data to add user
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RegisterUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.RegisterResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.RegisterResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.RegisterResponse'
+      security:
+      - BearerAuth: []
+      summary: Register user
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: JWT Bearer Token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

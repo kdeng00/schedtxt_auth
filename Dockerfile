@@ -29,6 +29,7 @@ COPY ./internal ./internal
 COPY ./Makefile .
 COPY ./.env .
 COPY ./migrations ./migrations
+COPY ./docs ./docs
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux make build

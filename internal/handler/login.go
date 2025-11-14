@@ -29,6 +29,18 @@ func NewLoginHandler(userStore model.UserStore) *LoginHandler {
 	return &LoginHandler{UserStore: userStore}
 }
 
+// Login godoc
+// @Summary      Login
+// @Description  Login and be given an access token (requires JWT)
+// @Tags         users
+// @Accept       json
+// @Produce      json
+// @Security     BearerAuth
+// @Param        request body      LoginAccount true  "Data to obtain a token"
+// @Success      200  {object}  LoginResponse
+// @Failure      400  {object}  LoginResponse
+// @Failure      500  {object}  LoginResponse
+// @Router       /login [post]
 func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 	var req LoginAccount
 	if err := ExtractFromRequest(r, &req); err != nil {

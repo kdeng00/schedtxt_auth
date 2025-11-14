@@ -18,3 +18,14 @@ make build
 ```
 ./textsender-auth -reset-db
 ```
+
+
+Generate API documentation
+```
+go install github.com/swaggo/swag/cmd/swag@latest
+go get -u github.com/swaggo/http-swagger/v2
+
+swag init --generalInfo main.go --dir ./cmd/api,./internal/handler --output docs/ --parseDependency --parseInternal
+```
+
+The API documentation can be viewed from `http://localhost:9080/swagger/index.html`.
