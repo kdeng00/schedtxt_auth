@@ -116,6 +116,57 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/service/register": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Create a service user that can send texts (requires JWT)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service users"
+                ],
+                "summary": "Register service user",
+                "parameters": [
+                    {
+                        "description": "Data to add user",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.ServiceCreationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ServiceCreationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ServiceCreationResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.ServiceCreationResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -186,6 +237,31 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.ServiceCreationRequest": {
+            "type": "object",
+            "properties": {
+                "passphrase": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.ServiceCreationResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.ServiceUser"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "token.Login": {
             "type": "object",
             "properties": {
@@ -196,6 +272,23 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.ServiceUser": {
+            "type": "object",
+            "properties": {
+                "date_created": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "passphrase": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }

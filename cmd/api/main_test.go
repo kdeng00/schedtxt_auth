@@ -16,6 +16,7 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
+	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 )
 
 var testRouter *mux.Router
@@ -23,27 +24,30 @@ var testRouter *mux.Router
 func TestMain(m *testing.M) {
 	cfg := load()
 
-	db, err := db.NewDatabase(cfg.GetDBConnString())
+	database, err := db.NewDatabase(cfg.GetDBConnString())
 	if err != nil {
 		fmt.Println(err.Error())
 		panic("Failed to initialize database")
 	}
-	defer db.Close()
+	defer database.Close()
 
 	ctx := context.Background()
-	err = db.ResetDatabase(ctx)
+	err = database.ResetDatabase(ctx)
 	if err != nil {
 		fmt.Println(err.Error())
 		panic("Failed to initialize database")
 	}
 
-	userStore := model.NewUserStore(db.Pool)
+	userStore := model.NewUserStore(database.Pool)
+	serviceStore := store.NewServiceStore(database.Pool)
 	userHandler := handler.NewUserHandler(userStore)
 	loginHandler := handler.NewLoginHandler(userStore)
+	serviceHandler := handler.NewServiceHandler(serviceStore)
 
 	testRouter = mux.NewRouter()
 	testRouter.HandleFunc(endpoint.Register, userHandler.Register).Methods("POST")
 	testRouter.HandleFunc(endpoint.Login, loginHandler.Login).Methods("POST")
+	testRouter.HandleFunc(endpoint.CreateServiceUser, serviceHandler.Register).Methods("POST")
 
 	code := m.Run()
 	os.Exit(code)

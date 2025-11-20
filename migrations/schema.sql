@@ -1,6 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
 DROP TABLE IF EXISTS users CASCADE;
+DROP TABLE IF EXISTS service_users CASCADE;
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -9,3 +10,9 @@ CREATE TABLE users (
     password TEXT NOT NULL
 );
 
+CREATE TABLE service_users (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    username TEXT NOT NULL,
+    passphrase TEXT NOT NULL,
+    created timestamptz DEFAULT now()
+);

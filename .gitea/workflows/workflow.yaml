@@ -107,20 +107,22 @@ jobs:
           echo "DB_PORT=$DB_PORT" >> .env
           echo "DB_SSLMODE=$DB_SSLMODE" >> .env
 
+          echo "Initializing config"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender_models_deploy_key
+          chmod 600 ~/.ssh/textsender_models_deploy_key
+          ssh-keyscan ${{ vars.MY_HOST }} >> ~/.ssh/known_hosts
+   
+          eval $(ssh-agent -s)
+          ssh-add -v ~/.ssh/textsender_models_deploy_key
+
+          go env -w GOPRIVATE='${{ secrets.GIT_HOST_ROOT }}'
+
+          echo "Creating local .gitconfig"
+          touch ~/.gitconfig
+          cat > ~/.gitconfig << "EOF"
+          [url "ssh://git@${{ secrets.GIT_HOST_ROOT }}"]
+            insteadOf = https://${{ secrets.GIT_HOST_ROOT }}
+          EOF
+
           go test -v ./...
-
-#    - name: Run gofmt (optional)
-      # Uncomment to check code formatting with gofmt
-#      run: |
-#        if [ -n "$(gofmt -l.)" ]; then
-#          echo "Go code is not formatted. Please run 'gofmt -w.' to fix it."
-#          exit 1
-#        fi
-
-#    - name: Run golint (optional)
-      # Uncomment to check code style with golint
-#      run: |
-#        if [ -n "$(golint./...)" ]; then
-#          echo "Go code has style issues. Please run 'golint./...' to see them."
-#          exit 1
-#        fi

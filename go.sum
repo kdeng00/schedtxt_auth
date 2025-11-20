@@ -1,5 +1,5 @@
-git.kundeng.us/phoenix/textsender-models v0.0.6-main-28b29802b9-556 h1:2NI8cXaxt2rsXrhy/rDhgoOzvjLQwbhwr4nv2g35Ah8=
-git.kundeng.us/phoenix/textsender-models v0.0.6-main-28b29802b9-556/go.mod h1:lx5MCnOgGgsdpwzrfi9uph5xmkeb6H8AuexUNGss2no=
+git.kundeng.us/phoenix/textsender-models v0.0.8-main-3ab81c2b6d-556 h1:iVE8Dg3aYugoZseneN9tQtdV2cymukspShF7dfExSVw=
+git.kundeng.us/phoenix/textsender-models v0.0.8-main-3ab81c2b6d-556/go.mod h1:lx5MCnOgGgsdpwzrfi9uph5xmkeb6H8AuexUNGss2no=
 github.com/KyleBanks/depth v1.2.1 h1:5h8fQADFrWtarTdtDudMmGsC7GPbOAu6RVB3ffsVFHc=
 github.com/KyleBanks/depth v1.2.1/go.mod h1:jzSb9d0L43HxTQfT+oSA1EEp2q+ne2uh6XgeJcm8brE=
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=

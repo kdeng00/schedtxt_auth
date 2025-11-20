@@ -12,11 +12,12 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
+	"git.kundeng.us/phoenix/textsender-auth/internal/store/mock"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
 )
 
 func TestLogin(t *testing.T) {
-	mockstore := NewMockUserStore()
+	mockstore := mock.NewMockUserStore()
 	handler := NewLoginHandler(mockstore)
 
 	testUser := GetTestUser()

@@ -43,6 +43,22 @@ definitions:
       username:
         type: string
     type: object
+  handler.ServiceCreationRequest:
+    properties:
+      passphrase:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.ServiceCreationResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/user.ServiceUser'
+        type: array
+      message:
+        type: string
+    type: object
   token.Login:
     properties:
       access_token:
@@ -50,6 +66,17 @@ definitions:
       expires_in:
         type: integer
       token_type:
+        type: string
+    type: object
+  user.ServiceUser:
+    properties:
+      date_created:
+        type: string
+      id:
+        type: string
+      passphrase:
+        type: string
+      username:
         type: string
     type: object
 host: localhost:9080
@@ -123,6 +150,38 @@ paths:
       summary: Register user
       tags:
       - users
+  /service/register:
+    post:
+      consumes:
+      - application/json
+      description: Create a service user that can send texts (requires JWT)
+      parameters:
+      - description: Data to add user
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ServiceCreationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.ServiceCreationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.ServiceCreationResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ServiceCreationResponse'
+      security:
+      - BearerAuth: []
+      summary: Register service user
+      tags:
+      - service users
 securityDefinitions:
   BearerAuth:
     description: JWT Bearer Token

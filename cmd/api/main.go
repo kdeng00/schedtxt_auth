@@ -21,6 +21,7 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
 	mdleware "git.kundeng.us/phoenix/textsender-auth/internal/middleware"
 	"git.kundeng.us/phoenix/textsender-auth/internal/model"
+	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 )
 
 // @title           textsender-auth
@@ -73,8 +74,11 @@ func main() {
 
 	// Services
 	userStore := model.NewUserStore(db.Pool)
+	serviceStore := store.NewServiceStore(db.Pool)
+
 	userHandler := handler.NewUserHandler(userStore)
 	loginHandler := handler.NewLoginHandler(userStore)
+	serviceHandler := handler.NewServiceHandler(serviceStore)
 
 	router := chi.NewRouter()
 
@@ -85,6 +89,7 @@ func main() {
 
 	router.Method("Post", endpoint.Register, http.HandlerFunc(userHandler.Register))
 	router.Method("Post", endpoint.Login, http.HandlerFunc(loginHandler.Login))
+	router.Method("Post", endpoint.CreateServiceUser, http.HandlerFunc(serviceHandler.Register))
 
 	router.Method("GET", "/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.Port)),
