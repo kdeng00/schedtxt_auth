@@ -90,6 +90,7 @@ func main() {
 	router.Method("Post", endpoint.Register, http.HandlerFunc(userHandler.Register))
 	router.Method("Post", endpoint.Login, http.HandlerFunc(loginHandler.Login))
 	router.Method("Post", endpoint.CreateServiceUser, http.HandlerFunc(serviceHandler.Register))
+	router.Method("Post", endpoint.LoginServiceUser, http.HandlerFunc(serviceHandler.Login))
 
 	router.Method("GET", "/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.Port)),

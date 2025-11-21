@@ -11,6 +11,7 @@ import (
 
 type ServiceStore interface {
 	CheckWithUsername(ctx context.Context, username string) (bool, error)
+	GetWithUsername(ctx context.Context, username string) (*user.ServiceUser, error)
 	Create(ctx context.Context, serviceUser *user.ServiceUser) error
 }
 
@@ -34,6 +35,21 @@ func (s *PGServiceStore) CheckWithUsername(ctx context.Context, username string)
 		}
 	} else {
 		return exists, nil
+	}
+}
+
+func (s *PGServiceStore) GetWithUsername(ctx context.Context, username string) (*user.ServiceUser, error) {
+	var serviceUser user.ServiceUser
+	query := `SELECT id, username, passphrase, created FROM service_users WHERE username = $1`
+
+	if err := s.db.QueryRow(ctx, query, username).Scan(&serviceUser.Id, &serviceUser.Username, &serviceUser.Passphrase, &serviceUser.Created); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("Error querying row: %v", err)
+		}
+	} else {
+		return &serviceUser, nil
 	}
 }
 

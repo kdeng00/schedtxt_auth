@@ -48,6 +48,7 @@ func TestMain(m *testing.M) {
 	testRouter.HandleFunc(endpoint.Register, userHandler.Register).Methods("POST")
 	testRouter.HandleFunc(endpoint.Login, loginHandler.Login).Methods("POST")
 	testRouter.HandleFunc(endpoint.CreateServiceUser, serviceHandler.Register).Methods("POST")
+	testRouter.HandleFunc(endpoint.LoginServiceUser, serviceHandler.Login).Methods("POST")
 
 	code := m.Run()
 	os.Exit(code)

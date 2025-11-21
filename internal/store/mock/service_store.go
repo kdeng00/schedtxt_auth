@@ -3,11 +3,11 @@ package mock
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 
-	"github.com/google/uuid"
-
 	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"github.com/google/uuid"
 )
 
 type MockServiceUserStore struct {
@@ -53,10 +53,6 @@ func (m *MockServiceUserStore) CheckWithUsername(ctx context.Context, username s
 		return false, m.Error
 	}
 
-	if m.Error != nil {
-		return false, m.Error
-	}
-
 	var exists bool
 
 	for _, serviceUser := range m.ServiceUsers {
@@ -70,5 +66,21 @@ func (m *MockServiceUserStore) CheckWithUsername(ctx context.Context, username s
 		return exists, nil
 	} else {
 		return exists, nil
+	}
+}
+
+func (m *MockServiceUserStore) GetWithUsername(ctx context.Context, username string) (*user.ServiceUser, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.Error != nil {
+		return nil, m.Error
+	}
+
+	serviceUser := m.ServiceUsersByUsername[username]
+	if serviceUser != nil {
+		return serviceUser, nil
+	} else {
+		return nil, fmt.Errorf("User not found")
 	}
 }

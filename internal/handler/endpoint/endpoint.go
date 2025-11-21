@@ -4,3 +4,4 @@ package endpoint
 const Register = "/api/v1/register"
 const Login = "/api/v1/login"
 const CreateServiceUser = "/api/v1/service/register"
+const LoginServiceUser = "/api/v1/service/login"
