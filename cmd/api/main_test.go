@@ -43,12 +43,14 @@ func TestMain(m *testing.M) {
 	userHandler := handler.NewUserHandler(userStore)
 	loginHandler := handler.NewLoginHandler(userStore)
 	serviceHandler := handler.NewServiceHandler(serviceStore)
+	refreshHandler := handler.NewRefreshHandler(userStore, serviceStore)
 
 	testRouter = mux.NewRouter()
 	testRouter.HandleFunc(endpoint.Register, userHandler.Register).Methods("POST")
 	testRouter.HandleFunc(endpoint.Login, loginHandler.Login).Methods("POST")
 	testRouter.HandleFunc(endpoint.CreateServiceUser, serviceHandler.Register).Methods("POST")
 	testRouter.HandleFunc(endpoint.LoginServiceUser, serviceHandler.Login).Methods("POST")
+	testRouter.HandleFunc(endpoint.TokenRefresh, refreshHandler.Refresh).Methods("POST")
 
 	code := m.Run()
 	os.Exit(code)

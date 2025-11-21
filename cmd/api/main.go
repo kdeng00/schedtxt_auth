@@ -79,6 +79,7 @@ func main() {
 	userHandler := handler.NewUserHandler(userStore)
 	loginHandler := handler.NewLoginHandler(userStore)
 	serviceHandler := handler.NewServiceHandler(serviceStore)
+	refreshHandler := handler.NewRefreshHandler(userStore, serviceStore)
 
 	router := chi.NewRouter()
 
@@ -91,6 +92,7 @@ func main() {
 	router.Method("Post", endpoint.Login, http.HandlerFunc(loginHandler.Login))
 	router.Method("Post", endpoint.CreateServiceUser, http.HandlerFunc(serviceHandler.Register))
 	router.Method("Post", endpoint.LoginServiceUser, http.HandlerFunc(serviceHandler.Login))
+	router.Method("Post", endpoint.TokenRefresh, http.HandlerFunc(refreshHandler.Refresh))
 
 	router.Method("GET", "/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.Port)),

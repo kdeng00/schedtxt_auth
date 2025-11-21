@@ -84,3 +84,20 @@ func (m *MockServiceUserStore) GetWithUsername(ctx context.Context, username str
 		return nil, fmt.Errorf("User not found")
 	}
 }
+
+func (m *MockServiceUserStore) GetWithId(ctx context.Context, id uuid.UUID) (*user.ServiceUser, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.Error != nil {
+		return nil, m.Error
+	}
+
+	for _, serviceUser := range m.ServiceUsers {
+		if serviceUser.Id == id {
+			return serviceUser, nil
+		}
+	}
+
+	return nil, nil
+}

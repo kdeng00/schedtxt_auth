@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -12,6 +13,7 @@ import (
 type ServiceStore interface {
 	CheckWithUsername(ctx context.Context, username string) (bool, error)
 	GetWithUsername(ctx context.Context, username string) (*user.ServiceUser, error)
+	GetWithId(ctx context.Context, id uuid.UUID) (*user.ServiceUser, error)
 	Create(ctx context.Context, serviceUser *user.ServiceUser) error
 }
 
@@ -43,6 +45,21 @@ func (s *PGServiceStore) GetWithUsername(ctx context.Context, username string) (
 	query := `SELECT id, username, passphrase, created FROM service_users WHERE username = $1`
 
 	if err := s.db.QueryRow(ctx, query, username).Scan(&serviceUser.Id, &serviceUser.Username, &serviceUser.Passphrase, &serviceUser.Created); err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, nil
+		} else {
+			return nil, fmt.Errorf("Error querying row: %v", err)
+		}
+	} else {
+		return &serviceUser, nil
+	}
+}
+
+func (s *PGServiceStore) GetWithId(ctx context.Context, id uuid.UUID) (*user.ServiceUser, error) {
+	var serviceUser user.ServiceUser
+	query := `SELECT id, username, passphrase, created FROM service_users WHERE id = $1`
+
+	if err := s.db.QueryRow(ctx, query, id).Scan(&serviceUser.Id, &serviceUser.Username, &serviceUser.Passphrase, &serviceUser.Created); err != nil {
 		if err == pgx.ErrNoRows {
 			return nil, nil
 		} else {

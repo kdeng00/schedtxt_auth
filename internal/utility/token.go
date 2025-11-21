@@ -53,6 +53,66 @@ func (t *TokenGenerator) GenerateToken(usr any) (*token.Login, error) {
 	}
 }
 
+func (t *TokenGenerator) VerifyToken(accessToken string) (bool, error) {
+	clms := &token.Claims{}
+
+	if tken, err := t.parseTokenWithClaims(accessToken, clms); err != nil {
+		return false, nil
+	} else {
+		if tken.Valid {
+			if clms != nil {
+				if clms.UserId != uuid.Nil {
+					return true, nil
+				} else {
+					return false, fmt.Errorf("User Id was not set")
+				}
+			} else {
+				return false, fmt.Errorf("Claims not parsed")
+			}
+		} else {
+			return false, fmt.Errorf("Invalid access token")
+		}
+	}
+}
+
+func (t *TokenGenerator) ExtractIdFromToken(accessToken string) (uuid.UUID, error) {
+	clms := &token.Claims{}
+
+	if tken, err := t.parseTokenWithClaims(accessToken, clms); err != nil {
+		return uuid.Nil, nil
+	} else {
+		if tken.Valid {
+			if clms != nil {
+				if clms.UserId != uuid.Nil {
+					return clms.UserId, nil
+				} else {
+					return uuid.Nil, fmt.Errorf("User Id was not set")
+				}
+			} else {
+				return uuid.Nil, fmt.Errorf("Claims not parsed")
+			}
+		} else {
+			return uuid.Nil, fmt.Errorf("Invalid access token")
+		}
+	}
+}
+
+
+func (t *TokenGenerator) parseTokenWithClaims(accessToken string, claims *token.Claims) (*jwt.Token, error) {
+	tken, err := jwt.ParseWithClaims(accessToken, claims, func(tken *jwt.Token) (any, error) {
+		if _, ok := tken.Method.(*jwt.SigningMethodHMAC); !ok {
+		    return nil, fmt.Errorf("unexpected signing method: %v", tken.Header["alg"])
+		}
+		return t.SecretKey, nil
+	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
+
+	if err != nil {
+		return nil, err
+	} else {
+		return tken, nil
+	}
+}
+
 func (t *TokenGenerator) generateClaims(usr any, role string, issuedAt time.Time, expiredAt time.Time) (*token.Claims, error) {
 	var id uuid.UUID
 	switch val := usr.(type) {

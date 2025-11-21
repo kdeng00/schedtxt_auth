@@ -16,6 +16,20 @@ definitions:
       message:
         type: string
     type: object
+  handler.RefreshRequest:
+    properties:
+      access_token:
+        type: string
+    type: object
+  handler.RefreshResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/token.Login'
+        type: array
+      message:
+        type: string
+    type: object
   handler.RegisterResponse:
     properties:
       data:
@@ -55,6 +69,22 @@ definitions:
       data:
         items:
           $ref: '#/definitions/user.ServiceUser'
+        type: array
+      message:
+        type: string
+    type: object
+  handler.ServiceLoginRequest:
+    properties:
+      passphrase:
+        type: string
+      username:
+        type: string
+    type: object
+  handler.ServiceLoginResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/token.Login'
         type: array
       message:
         type: string
@@ -150,6 +180,34 @@ paths:
       summary: Register user
       tags:
       - users
+  /service/login:
+    post:
+      consumes:
+      - application/json
+      description: Servce login and be given an access token (requires JWT)
+      parameters:
+      - description: Data to obtain a service token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.ServiceLoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.ServiceLoginResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.ServiceLoginResponse'
+      security:
+      - BearerAuth: []
+      summary: Service login
+      tags:
+      - service users
   /service/register:
     post:
       consumes:
@@ -182,6 +240,38 @@ paths:
       summary: Register service user
       tags:
       - service users
+  /token/refresh:
+    post:
+      consumes:
+      - application/json
+      description: Refresh token endpoint (requires JWT)
+      parameters:
+      - description: Data to refresh token
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.RefreshRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.RefreshResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.RefreshResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.RefreshResponse'
+      security:
+      - BearerAuth: []
+      summary: Obtain a refresh token
+      tags:
+      - refresh
 securityDefinitions:
   BearerAuth:
     description: JWT Bearer Token
