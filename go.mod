@@ -1,9 +1,9 @@
 module git.kundeng.us/phoenix/textsender-auth
 
-go 1.25.3
+go 1.25.4
 
 require (
-	git.kundeng.us/phoenix/textsender-models v0.0.8-main-3ab81c2b6d-556
+	git.kundeng.us/phoenix/textsender-models v0.0.9
 	github.com/go-chi/chi/v5 v5.2.3
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
