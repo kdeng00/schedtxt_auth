@@ -14,8 +14,9 @@ import (
 )
 
 func TestCreateUserWithMock(t *testing.T) {
+	cfg := GetConfig()
 	mockstore := mock.NewMockUserStore()
-	handler := NewUserHandler(mockstore)
+	handler := NewUserHandler(cfg, mockstore)
 
 	testUser := GetTestUser()
 	jsonValue, _ := json.Marshal(testUser)

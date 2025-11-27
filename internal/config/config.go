@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strconv"
+	"strings"
 
 	"github.com/joho/godotenv"
 
@@ -13,9 +15,10 @@ import (
 )
 
 type Config struct {
-	DBConnString string
-	ServerPort   string
-	ResetDB      bool
+	DBConnString       string
+	ServerPort         string
+	ResetDB            bool
+	EnableRegistration bool
 }
 
 type ConnectionInfo struct {
@@ -52,16 +55,24 @@ func Load() *Config {
 
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		cwd, _ := os.Getwd()
+		envPath := path.Join(cwd, "../..", ".env")
+		if err = godotenv.Load(envPath); err != nil {
+			prevPath := path.Join(envPath, "../..", ".env")
+			if err = godotenv.Load(prevPath); err != nil {
+				log.Fatal("Error loading .env file")
+			}
+		}
 	}
 
 	unpackedConnString := UnpackDBConnString()
 	dbConnString := unpackedConnString.Parse()
 
 	return &Config{
-		DBConnString: dbConnString,
-		ServerPort:   *port,
-		ResetDB:      *resetDb,
+		DBConnString:       dbConnString,
+		ServerPort:         *port,
+		ResetDB:            *resetDb,
+		EnableRegistration: CheckRegistration(),
 	}
 }
 
@@ -118,6 +129,20 @@ func UnpackDBConnString() (connInfo ConnectionInfo) {
 	}
 
 	return
+}
+
+func CheckRegistration() bool {
+	if flagValue := os.Getenv("ENABLE_REGISTRATION"); flagValue != "" {
+		if val := strings.ToUpper(flagValue); val == "TRUE" {
+			return true
+		} else if val == "FALSE" {
+			return false
+		} else {
+			return true
+		}
+	} else {
+		return true
+	}
 }
 
 func (c *Config) GetDBConnString() string {

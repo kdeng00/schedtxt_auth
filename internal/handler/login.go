@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"net/http"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/token"
+	"git.kundeng.us/phoenix/textsender-models/tx0/token"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
+	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
 )
 
@@ -22,11 +22,12 @@ type LoginResponse struct {
 }
 
 type LoginHandler struct {
-	UserStore model.UserStore
+	Config    *config.Config
+	UserStore store.UserStore
 }
 
-func NewLoginHandler(userStore model.UserStore) *LoginHandler {
-	return &LoginHandler{UserStore: userStore}
+func NewLoginHandler(cfg *config.Config, userStore store.UserStore) *LoginHandler {
+	return &LoginHandler{Config: cfg, UserStore: userStore}
 }
 
 // Login godoc

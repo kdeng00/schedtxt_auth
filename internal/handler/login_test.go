@@ -17,8 +17,9 @@ import (
 )
 
 func TestLogin(t *testing.T) {
+	cfg := GetConfig()
 	mockstore := mock.NewMockUserStore()
-	handler := NewLoginHandler(mockstore)
+	handler := NewLoginHandler(cfg, mockstore)
 
 	testUser := GetTestUser()
 	unhashedPassword := testUser.Password

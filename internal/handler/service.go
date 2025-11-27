@@ -3,8 +3,8 @@ package handler
 import (
 	"net/http"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/token"
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"git.kundeng.us/phoenix/textsender-models/tx0/token"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	"git.kundeng.us/phoenix/textsender-auth/internal/store"
@@ -12,11 +12,12 @@ import (
 )
 
 type ServiceHandler struct {
+	Config       *config.Config
 	ServiceStore store.ServiceStore
 }
 
-func NewServiceHandler(serviceStore store.ServiceStore) *ServiceHandler {
-	return &ServiceHandler{ServiceStore: serviceStore}
+func NewServiceHandler(cfg *config.Config, serviceStore store.ServiceStore) *ServiceHandler {
+	return &ServiceHandler{Config: cfg, ServiceStore: serviceStore}
 }
 
 type ServiceCreationRequest struct {
@@ -39,6 +40,7 @@ type ServiceCreationResponse struct {
 // @Param        request body      ServiceCreationRequest true  "Data to add user"
 // @Success      200  {object}  ServiceCreationResponse
 // @Failure      400  {object}  ServiceCreationResponse
+// @Failure      403  {object}  ServiceCreationResponse
 // @Failure      500  {object}  ServiceCreationResponse
 // @Router       /service/register [post]
 func (s *ServiceHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +54,12 @@ func (s *ServiceHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	var statusCode int
 	var resp ServiceCreationResponse
+	if !s.Config.EnableRegistration {
+		statusCode = http.StatusForbidden
+		resp.Message = "Registration disabled"
+		RespondWithJson(w, statusCode, &resp)
+		return
+	}
 
 	ctx := r.Context()
 	if exists, err := s.ServiceStore.CheckWithUsername(ctx, req.Username); err != nil {

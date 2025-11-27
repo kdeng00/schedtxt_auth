@@ -20,7 +20,6 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
 	mdleware "git.kundeng.us/phoenix/textsender-auth/internal/middleware"
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 )
 
@@ -73,13 +72,13 @@ func main() {
 	}
 
 	// Services
-	userStore := model.NewUserStore(db.Pool)
+	userStore := store.NewUserStore(db.Pool)
 	serviceStore := store.NewServiceStore(db.Pool)
 
-	userHandler := handler.NewUserHandler(userStore)
-	loginHandler := handler.NewLoginHandler(userStore)
-	serviceHandler := handler.NewServiceHandler(serviceStore)
-	refreshHandler := handler.NewRefreshHandler(userStore, serviceStore)
+	userHandler := handler.NewUserHandler(cfg, userStore)
+	loginHandler := handler.NewLoginHandler(cfg, userStore)
+	serviceHandler := handler.NewServiceHandler(cfg, serviceStore)
+	refreshHandler := handler.NewRefreshHandler(cfg, userStore, serviceStore)
 
 	router := chi.NewRouter()
 

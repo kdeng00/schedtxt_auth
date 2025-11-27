@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"net/http"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 	"github.com/google/uuid"
 
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
+	"git.kundeng.us/phoenix/textsender-auth/internal/config"
+	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
 )
 
@@ -29,11 +30,12 @@ type RegisterResponse struct {
 }
 
 type UserHandler struct {
-	UserStore model.UserStore
+	Config    *config.Config
+	UserStore store.UserStore
 }
 
-func NewUserHandler(userStore model.UserStore) *UserHandler {
-	return &UserHandler{UserStore: userStore}
+func NewUserHandler(cfg *config.Config, userStore store.UserStore) *UserHandler {
+	return &UserHandler{Config: cfg, UserStore: userStore}
 }
 
 // Register godoc
@@ -46,6 +48,7 @@ func NewUserHandler(userStore model.UserStore) *UserHandler {
 // @Param        request body      RegisterUser true  "Data to add user"
 // @Success      200  {object}  RegisterResponse
 // @Failure      400  {object}  RegisterResponse
+// @Failure      403  {object}  RegisterResponse
 // @Failure      500  {object}  RegisterResponse
 // @Router       /register [post]
 func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -60,6 +63,12 @@ func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 	var statusCode int
 	var resp RegisterResponse
+	if !u.Config.EnableRegistration {
+		statusCode = http.StatusForbidden
+		resp.Message = "Registration disabled"
+		RespondWithJson(w, statusCode, &resp)
+		return
+	}
 	user := user.User{Username: req.Username, Password: req.Password, PhoneNumber: req.PhoneNumber}
 
 	fmt.Println("Username:", user.Username)

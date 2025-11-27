@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 	"github.com/stretchr/testify/assert"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
@@ -16,8 +16,9 @@ import (
 )
 
 func TestCreateServiceUserWithMock(t *testing.T) {
+	cfg := GetConfig()
 	mockStore := mock.NewMockServiceUserStore()
-	handler := NewServiceHandler(mockStore)
+	handler := NewServiceHandler(cfg, mockStore)
 
 	testService := ServiceCreationRequest{Username: "swoon", Passphrase: "ewrewr329n12y3x2!2"}
 	jsonValue, err := json.Marshal(testService)
@@ -53,7 +54,8 @@ func TestLoginServiceUserWithMock(t *testing.T) {
 		assert.NoError(t, err, "Error creating service user: %v", err)
 	}
 
-	handler := NewServiceHandler(mockStore)
+	cfg := GetConfig()
+	handler := NewServiceHandler(cfg, mockStore)
 	testService := ServiceLoginRequest{Username: serviceUser.Username, Passphrase: unhashed}
 	jsonValue, err := json.Marshal(testService)
 	assert.NoError(t, err, "Error marshaling request")

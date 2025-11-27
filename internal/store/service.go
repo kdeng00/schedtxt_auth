@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"

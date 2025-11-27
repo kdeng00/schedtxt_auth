@@ -15,7 +15,6 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/db"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 )
 
@@ -38,12 +37,12 @@ func TestMain(m *testing.M) {
 		panic("Failed to initialize database")
 	}
 
-	userStore := model.NewUserStore(database.Pool)
+	userStore := store.NewUserStore(database.Pool)
 	serviceStore := store.NewServiceStore(database.Pool)
-	userHandler := handler.NewUserHandler(userStore)
-	loginHandler := handler.NewLoginHandler(userStore)
-	serviceHandler := handler.NewServiceHandler(serviceStore)
-	refreshHandler := handler.NewRefreshHandler(userStore, serviceStore)
+	userHandler := handler.NewUserHandler(cfg, userStore)
+	loginHandler := handler.NewLoginHandler(cfg, userStore)
+	serviceHandler := handler.NewServiceHandler(cfg, serviceStore)
+	refreshHandler := handler.NewRefreshHandler(cfg, userStore, serviceStore)
 
 	testRouter = mux.NewRouter()
 	testRouter.HandleFunc(endpoint.Register, userHandler.Register).Methods("POST")
@@ -76,9 +75,10 @@ func load() *config.Config {
 	dbConnString := unpackedConnString.Parse()
 
 	return &config.Config{
-		DBConnString: dbConnString,
-		ServerPort:   *port,
-		ResetDB:      *resetDb,
+		DBConnString:       dbConnString,
+		ServerPort:         *port,
+		ResetDB:            *resetDb,
+		EnableRegistration: config.CheckRegistration(),
 	}
 }
 

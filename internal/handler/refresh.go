@@ -3,21 +3,21 @@ package handler
 import (
 	"net/http"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/token"
+	"git.kundeng.us/phoenix/textsender-models/tx0/token"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
-	"git.kundeng.us/phoenix/textsender-auth/internal/model"
 	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
 )
 
 type RefreshHandler struct {
-	UserStore    model.UserStore
+	Config       *config.Config
+	UserStore    store.UserStore
 	ServiceStore store.ServiceStore
 }
 
-func NewRefreshHandler(userStore model.UserStore, serviceStore store.ServiceStore) *RefreshHandler {
-	return &RefreshHandler{UserStore: userStore, ServiceStore: serviceStore}
+func NewRefreshHandler(cfg *config.Config, userStore store.UserStore, serviceStore store.ServiceStore) *RefreshHandler {
+	return &RefreshHandler{Config: cfg, UserStore: userStore, ServiceStore: serviceStore}
 }
 
 type RefreshRequest struct {

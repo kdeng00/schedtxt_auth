@@ -1,4 +1,4 @@
-package model
+package store
 
 import (
 	"context"
@@ -8,9 +8,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 )
-
 
 type UserStore interface {
 	CreateUser(ctx context.Context, user *user.User) error

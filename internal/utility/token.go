@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"time"
 
+	"git.kundeng.us/phoenix/textsender-models/tx0/token"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 	"github.com/google/uuid"
 	"github.com/golang-jwt/jwt/v5"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
-	"git.kundeng.us/phoenix/textsender-models/pkg/token"
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
 )
 
 const ROLE_TYPE = "regular"

@@ -7,7 +7,7 @@ import (
 
 	"github.com/google/uuid"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 )
 
 type MockUserStore struct {

@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"git.kundeng.us/phoenix/textsender-models/pkg/user"
+	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 	"github.com/stretchr/testify/assert"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
@@ -35,7 +35,8 @@ func TestRefreshTokenWithMock(t *testing.T) {
 		assert.NoError(t, err, "Error creating service user: %v", err)
 	}
 
-	handler := NewServiceHandler(mockStore)
+	cfg := GetConfig()
+	handler := NewServiceHandler(cfg, mockStore)
 	testService := ServiceLoginRequest{Username: serviceUser.Username, Passphrase: unhashed}
 	jsonValue, err := json.Marshal(testService)
 	assert.NoError(t, err, "Error marshaling request")
@@ -56,7 +57,7 @@ func TestRefreshTokenWithMock(t *testing.T) {
 	jsonValue, err = json.Marshal(testReq)
 	assert.NoError(t, err, "Error marshaling request")
 
-	newHandler := NewRefreshHandler(userStore, mockStore)
+	newHandler := NewRefreshHandler(cfg, userStore, mockStore)
 	req, _ = http.NewRequest("POST", endpoint.TokenRefresh, strings.NewReader(string(jsonValue)))
 	rr = httptest.NewRecorder()
 
