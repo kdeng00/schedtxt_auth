@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/rs/cors"
 	"github.com/swaggo/http-swagger/v2"
 
 	_ "git.kundeng.us/phoenix/textsender-auth/docs"
@@ -97,10 +98,23 @@ func main() {
 		httpSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.Port)),
 	))
 
+
+	// Configure CORS
+	c := cors.New(cors.Options{
+		AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%s", config.Port), "https://textsender.com"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link", "X-Total-Count"},
+		AllowCredentials: true,
+		MaxAge:           300, // 5 minutes
+	})
+
+	rr := c.Handler(router)
+
 	// Start server
 	server := &http.Server{
 		Addr:         ":" + cfg.ServerPort,
-		Handler:      router,
+		Handler:      rr,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
 		IdleTimeout:  60 * time.Second,
