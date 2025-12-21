@@ -85,7 +85,7 @@ func main() {
 
 	// Configure CORS
 	router.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{fmt.Sprintf("http://localhost:%s", config.Port), "http://localhost:5173", "https://textsender.com"},
+		AllowedOrigins:   cfg.AllowedOrigins,
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link", "X-Total-Count"},

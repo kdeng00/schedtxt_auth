@@ -107,6 +107,7 @@ jobs:
           echo "DB_PORT=$DB_PORT" >> .env
           echo "DB_SSLMODE=$DB_SSLMODE" >> .env
           echo "ENABLE_REGISTRATION=true" >> .env
+          echo "ALLOWED_ORIGINS=http://localhost:9080" >> .env
 
           echo "Initializing config"
           mkdir -p ~/.ssh
