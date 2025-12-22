@@ -6,8 +6,8 @@ import (
 
 	"git.kundeng.us/phoenix/textsender-models/tx0/token"
 	"git.kundeng.us/phoenix/textsender-models/tx0/user"
-	"github.com/google/uuid"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 )
@@ -16,7 +16,7 @@ const ROLE_TYPE = "regular"
 const TOKEN_TYPE = "Bearer"
 
 type TokenGenerator struct {
-	SecretKey []byte
+	SecretKey  []byte
 	hourOffset time.Duration
 }
 
@@ -48,7 +48,7 @@ func (t *TokenGenerator) GenerateToken(usr any) (*token.Login, error) {
 		if tokenString, err := myToken.SignedString(t.SecretKey); err != nil {
 			return nil, err
 		} else {
-			return &token.Login{AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
+			return &token.Login{UserId: claims.UserId, AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
 		}
 	}
 }
@@ -97,11 +97,10 @@ func (t *TokenGenerator) ExtractIdFromToken(accessToken string) (uuid.UUID, erro
 	}
 }
 
-
 func (t *TokenGenerator) parseTokenWithClaims(accessToken string, claims *token.Claims) (*jwt.Token, error) {
 	tken, err := jwt.ParseWithClaims(accessToken, claims, func(tken *jwt.Token) (any, error) {
 		if _, ok := tken.Method.(*jwt.SigningMethodHMAC); !ok {
-		    return nil, fmt.Errorf("unexpected signing method: %v", tken.Header["alg"])
+			return nil, fmt.Errorf("unexpected signing method: %v", tken.Header["alg"])
 		}
 		return t.SecretKey, nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))

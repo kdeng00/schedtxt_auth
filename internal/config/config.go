@@ -19,6 +19,7 @@ type Config struct {
 	ServerPort         string
 	ResetDB            bool
 	EnableRegistration bool
+	AllowedOrigins     []string
 }
 
 type ConnectionInfo struct {
@@ -67,12 +68,23 @@ func Load() *Config {
 
 	unpackedConnString := UnpackDBConnString()
 	dbConnString := unpackedConnString.Parse()
+	allowedOrigins := unpackAllowedOrigin()
 
-	return &Config{
-		DBConnString:       dbConnString,
-		ServerPort:         *port,
-		ResetDB:            *resetDb,
-		EnableRegistration: CheckRegistration(),
+	if len(allowedOrigins) > 0 {
+		return &Config{
+			DBConnString:       dbConnString,
+			ServerPort:         *port,
+			ResetDB:            *resetDb,
+			EnableRegistration: CheckRegistration(),
+			AllowedOrigins:     allowedOrigins,
+		}
+	} else {
+		return &Config{
+			DBConnString:       dbConnString,
+			ServerPort:         *port,
+			ResetDB:            *resetDb,
+			EnableRegistration: CheckRegistration(),
+		}
 	}
 }
 
@@ -129,6 +141,12 @@ func UnpackDBConnString() (connInfo ConnectionInfo) {
 	}
 
 	return
+}
+
+func unpackAllowedOrigin() []string {
+	allowedOriginsRaw := os.Getenv("ALLOWED_ORIGINS")
+	allowedOriginsSplit := strings.Split(allowedOriginsRaw, ",")
+	return allowedOriginsSplit
 }
 
 func CheckRegistration() bool {
