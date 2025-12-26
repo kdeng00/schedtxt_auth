@@ -4,21 +4,24 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"net/http"
 	"os"
 	"path"
 	"testing"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 	"github.com/joho/godotenv"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
 	"git.kundeng.us/phoenix/textsender-auth/internal/db"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
+	mdleware "git.kundeng.us/phoenix/textsender-auth/internal/middleware"
+	"git.kundeng.us/phoenix/textsender-auth/internal/services"
 	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 )
 
-var testRouter *mux.Router
+var testRouter *chi.Mux
 
 func TestMain(m *testing.M) {
 	cfg := load()
@@ -44,12 +47,14 @@ func TestMain(m *testing.M) {
 	serviceHandler := handler.NewServiceHandler(cfg, serviceStore)
 	refreshHandler := handler.NewRefreshHandler(cfg, userStore, serviceStore)
 
-	testRouter = mux.NewRouter()
-	testRouter.HandleFunc(endpoint.Register, userHandler.Register).Methods("POST")
-	testRouter.HandleFunc(endpoint.Login, loginHandler.Login).Methods("POST")
-	testRouter.HandleFunc(endpoint.CreateServiceUser, serviceHandler.Register).Methods("POST")
-	testRouter.HandleFunc(endpoint.LoginServiceUser, serviceHandler.Login).Methods("POST")
-	testRouter.HandleFunc(endpoint.TokenRefresh, refreshHandler.Refresh).Methods("POST")
+	testRouter = chi.NewRouter()
+	jwtService := services.NewJWTService(config.GetSecretKey())
+	testRouter.Method("POST", endpoint.Register, http.HandlerFunc(userHandler.Register))
+	testRouter.Method("POST", endpoint.Login, http.HandlerFunc(loginHandler.Login))
+	testRouter.Method("POST", endpoint.CreateServiceUser, http.HandlerFunc(serviceHandler.Register))
+	testRouter.Method("POST", endpoint.LoginServiceUser, http.HandlerFunc(serviceHandler.Login))
+	testRouter.Method("POST", endpoint.TokenRefresh, http.HandlerFunc(refreshHandler.Refresh))
+	testRouter.Method("PATCH", endpoint.UpdatePassword, mdleware.AuthMiddleware(jwtService)(http.HandlerFunc(loginHandler.UpdatePassword)))
 
 	code := m.Run()
 	os.Exit(code)

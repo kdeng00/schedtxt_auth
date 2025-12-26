@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -9,10 +11,12 @@ import (
 	"github.com/joho/godotenv"
 
 	"git.kundeng.us/phoenix/textsender-auth/internal/config"
+	"git.kundeng.us/phoenix/textsender-auth/internal/store/mock"
+	"git.kundeng.us/phoenix/textsender-auth/internal/utility"
 )
 
 func GetTestUser() user.User {
-	return user.User{Username: "ghost", PhoneNumber: "+1234567890", Password: "dfgdffddfd"}
+	return user.User{Username: "ghost", PhoneNumber: "+1234567890", Password: "Dfgdffd343dfd!"}
 }
 
 func GetConfig() *config.Config {
@@ -37,4 +41,23 @@ func GetConfig() *config.Config {
 		ResetDB:            false,
 		EnableRegistration: config.CheckRegistration(),
 	}
+}
+
+func createUser(ctx context.Context, userStore *mock.MockUserStore) (*user.User, *string, error) {
+	testUser := GetTestUser()
+	unhashedPassword := testUser.Password
+	hashing := utility.HashMash{}
+	if err := hashing.SetPassword(testUser.Password); err != nil {
+		return nil, nil, fmt.Errorf("Error setting password: %v", err)
+	}
+
+	hashedPassword, err := hashing.HashPassword()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	testUser.Password = hashedPassword
+	userStore.CreateUser(ctx, &testUser)
+
+	return &testUser, &unhashedPassword, nil
 }

@@ -85,20 +85,25 @@ func (u *UserHandler) Register(w http.ResponseWriter, r *http.Request) {
 			statusCode = http.StatusBadRequest
 			resp.Message = "Failure in creating User"
 		} else {
-			hashing := utility.HashMash{Password: user.Password}
-			if hashedPassword, err := hashing.HashPassword(); err != nil {
+			hashing := utility.HashMash{}
+			if err := hashing.SetPassword(req.Password); err != nil {
 				statusCode = http.StatusInternalServerError
 				resp.Message = err.Error()
 			} else {
-				user.Password = hashedPassword
-				err := u.UserStore.CreateUser(ctx, &user)
-				if err != nil {
+				if hashedPassword, err := hashing.HashPassword(); err != nil {
 					statusCode = http.StatusInternalServerError
 					resp.Message = err.Error()
 				} else {
-					resp.Message = "Successful"
-					statusCode = http.StatusOK
-					resp.Data = append(resp.Data, RegisterResponseItem{Id: user.Id, PhoneNumber: user.PhoneNumber, Username: user.Username})
+					user.Password = hashedPassword
+					err := u.UserStore.CreateUser(ctx, &user)
+					if err != nil {
+						statusCode = http.StatusInternalServerError
+						resp.Message = err.Error()
+					} else {
+						resp.Message = "Successful"
+						statusCode = http.StatusOK
+						resp.Data = append(resp.Data, RegisterResponseItem{Id: user.Id, PhoneNumber: user.PhoneNumber, Username: user.Username})
+					}
 				}
 			}
 		}

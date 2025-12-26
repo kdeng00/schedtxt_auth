@@ -17,6 +17,7 @@ type UserStore interface {
 	GetUserByUsername(ctx context.Context, username string) (*user.User, error)
 	GetAllUsers(ctx context.Context) ([]*user.User, error)
 	UserExists(ctx context.Context, username string) (bool, error)
+	UpdatePassword(ctx context.Context, id uuid.UUID, password string) (int64, error)
 }
 
 type PGUserStore struct {
@@ -31,20 +32,20 @@ func (s *PGUserStore) CreateUser(ctx context.Context, user *user.User) error {
 	query := `
 		INSERT INTO users (phone_number, username, password)
 		VALUES ($1, $2, $3)
-		RETURNING id, phone_number, username
+		RETURNING id, phone_number, username, created
 	`
 
 	return s.db.QueryRow(ctx, query, user.PhoneNumber, user.Username, user.Password).Scan(
-		&user.Id, &user.PhoneNumber, &user.Username,
+		&user.Id, &user.PhoneNumber, &user.Username, &user.Created,
 	)
 }
 
 func (s *PGUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*user.User, error) {
-	query := `SELECT id, username, password, phone_number FROM users WHERE id = $1`
+	query := `SELECT id, username, password, phone_number, created FROM users WHERE id = $1`
 
 	var user user.User
 	err := s.db.QueryRow(ctx, query, id).Scan(
-		&user.Id, &user.Username, &user.Password, &user.PhoneNumber,
+		&user.Id, &user.Username, &user.Password, &user.PhoneNumber, &user.Created,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -58,11 +59,11 @@ func (s *PGUserStore) GetUserByID(ctx context.Context, id uuid.UUID) (*user.User
 }
 
 func (s *PGUserStore) GetUserByUsername(ctx context.Context, username string) (*user.User, error) {
-	query := `SELECT id, username, password, phone_number FROM users WHERE username = $1`
+	query := `SELECT id, username, password, phone_number, created FROM users WHERE username = $1`
 
 	var user user.User
 	err := s.db.QueryRow(ctx, query, username).Scan(
-		&user.Id, &user.Username, &user.Password, &user.PhoneNumber,
+		&user.Id, &user.Username, &user.Password, &user.PhoneNumber, &user.Created,
 	)
 
 	if err == pgx.ErrNoRows {
@@ -76,7 +77,7 @@ func (s *PGUserStore) GetUserByUsername(ctx context.Context, username string) (*
 }
 
 func (s *PGUserStore) GetAllUsers(ctx context.Context) ([]*user.User, error) {
-	query := `SELECT id, username, password, phone_number FROM users`
+	query := `SELECT id, username, password, phone_number, created FROM users`
 
 	rows, err := s.db.Query(ctx, query)
 	if err != nil {
@@ -88,7 +89,7 @@ func (s *PGUserStore) GetAllUsers(ctx context.Context) ([]*user.User, error) {
 	for rows.Next() {
 		var user user.User
 		if err := rows.Scan(
-			&user.Id, &user.Username, &user.Password, &user.PhoneNumber,
+			&user.Id, &user.Username, &user.Password, &user.PhoneNumber, &user.Created,
 		); err != nil {
 			return nil, fmt.Errorf("scanning user row: %w", err)
 		}
@@ -112,4 +113,13 @@ func (s *PGUserStore) UserExists(ctx context.Context, username string) (bool, er
 	}
 
 	return exists, nil
+}
+
+func (s *PGUserStore) UpdatePassword(ctx context.Context, id uuid.UUID, password string) (int64, error) {
+	query := `UPDATE users SET password = $1 WHERE id = $2`
+	if affected, err := s.db.Exec(ctx, query, password, id); err != nil {
+		return 0, err
+	} else {
+		return affected.RowsAffected(), nil
+	}
 }

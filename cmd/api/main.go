@@ -21,6 +21,7 @@ import (
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler"
 	"git.kundeng.us/phoenix/textsender-auth/internal/handler/endpoint"
 	mdleware "git.kundeng.us/phoenix/textsender-auth/internal/middleware"
+	"git.kundeng.us/phoenix/textsender-auth/internal/services"
 	"git.kundeng.us/phoenix/textsender-auth/internal/store"
 )
 
@@ -82,6 +83,7 @@ func main() {
 	refreshHandler := handler.NewRefreshHandler(cfg, userStore, serviceStore)
 
 	router := chi.NewRouter()
+	jwtService := services.NewJWTService(config.GetSecretKey())
 
 	// Configure CORS
 	router.Use(cors.Handler(cors.Options{
@@ -102,6 +104,7 @@ func main() {
 	router.Method("Post", endpoint.CreateServiceUser, http.HandlerFunc(serviceHandler.Register))
 	router.Method("Post", endpoint.LoginServiceUser, http.HandlerFunc(serviceHandler.Login))
 	router.Method("Post", endpoint.TokenRefresh, http.HandlerFunc(refreshHandler.Refresh))
+	router.Method("PATCH", endpoint.UpdatePassword, mdleware.AuthMiddleware(jwtService)(http.HandlerFunc(loginHandler.UpdatePassword)))
 
 	router.Method("GET", "/swagger/*", httpSwagger.Handler(
 		httpSwagger.URL(fmt.Sprintf("http://localhost:%s/swagger/doc.json", config.Port)),

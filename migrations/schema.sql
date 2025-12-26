@@ -7,7 +7,8 @@ CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     phone_number TEXT NOT NULL,
     username TEXT NOT NULL,
-    password TEXT NOT NULL
+    password TEXT NOT NULL,
+    created timestamptz DEFAULT now()
 );
 
 CREATE TABLE service_users (

@@ -275,9 +275,89 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/user/password/update": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the password of a regular account (requires JWT)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update Password",
+                "parameters": [
+                    {
+                        "description": "Needed data to update password",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdatePasswordResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdatePasswordResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdatePasswordResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "git_kundeng_us_phoenix_textsender-models_tx0_user.User": {
+            "type": "object",
+            "properties": {
+                "date_created": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_login": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.LoginAccount": {
             "type": "object",
             "properties": {
@@ -417,6 +497,37 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.UpdatePasswordRequest": {
+            "type": "object",
+            "properties": {
+                "confirmed_password": {
+                    "type": "string"
+                },
+                "current_password": {
+                    "type": "string"
+                },
+                "updated_password": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UpdatePasswordResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/git_kundeng_us_phoenix_textsender-models_tx0_user.User"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "token.Login": {
             "type": "object",
             "properties": {
@@ -427,6 +538,9 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "token_type": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

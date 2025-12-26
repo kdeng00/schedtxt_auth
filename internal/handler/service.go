@@ -70,19 +70,24 @@ func (s *ServiceHandler) Register(w http.ResponseWriter, r *http.Request) {
 			statusCode = http.StatusBadRequest
 			resp.Message = "Service user already exists"
 		} else {
-			hashing := utility.HashMash{Password: req.Passphrase}
-			if hashedPassword, err := hashing.HashPassword(); err != nil {
+			hashing := utility.HashMash{}
+			if err := hashing.SetPassword(req.Passphrase); err != nil {
 				statusCode = http.StatusInternalServerError
 				resp.Message = err.Error()
 			} else {
-				serviceUser := user.ServiceUser{Username: req.Username, Passphrase: hashedPassword}
-				if err := s.ServiceStore.Create(ctx, &serviceUser); err != nil {
+				if hashedPassword, err := hashing.HashPassword(); err != nil {
 					statusCode = http.StatusInternalServerError
 					resp.Message = err.Error()
 				} else {
-					statusCode = http.StatusCreated
-					resp.Message = "Successful"
-					resp.Data = append(resp.Data, &serviceUser)
+					serviceUser := user.ServiceUser{Username: req.Username, Passphrase: hashedPassword}
+					if err := s.ServiceStore.Create(ctx, &serviceUser); err != nil {
+						statusCode = http.StatusInternalServerError
+						resp.Message = err.Error()
+					} else {
+						statusCode = http.StatusCreated
+						resp.Message = "Successful"
+						resp.Data = append(resp.Data, &serviceUser)
+					}
 				}
 			}
 		}
@@ -139,23 +144,28 @@ func (s *ServiceHandler) Login(w http.ResponseWriter, r *http.Request) {
 			statusCode = http.StatusNotFound
 			resp.Message = "Not found"
 		} else {
-			hashing := utility.HashMash{Password: req.Passphrase}
-			if !hashing.CheckPasswordHash(req.Passphrase, serviceUser.Passphrase) {
+			hashing := utility.HashMash{}
+			if err := hashing.SetPassword(req.Passphrase); err != nil {
 				statusCode = http.StatusInternalServerError
-				resp.Message = "Not valid"
+				resp.Message = err.Error()
 			} else {
-				var tokGen utility.TokenGenerator
-				tokGen.SetHourOffset(8)
-				secretKey := config.GetSecretKey()
-				tokGen.SetSecretKey(secretKey)
-
-				if myToken, err := tokGen.GenerateToken(*serviceUser); err != nil {
+				if !hashing.CheckPasswordHash(req.Passphrase, serviceUser.Passphrase) {
 					statusCode = http.StatusInternalServerError
-					resp.Message = err.Error()
+					resp.Message = "Not valid"
 				} else {
-					statusCode = http.StatusOK
-					resp.Data = append(resp.Data, myToken)
-					resp.Message = "Successful"
+					var tokGen utility.TokenGenerator
+					tokGen.SetHourOffset(8)
+					secretKey := config.GetSecretKey()
+					tokGen.SetSecretKey(secretKey)
+
+					if myToken, err := tokGen.GenerateToken(*serviceUser); err != nil {
+						statusCode = http.StatusInternalServerError
+						resp.Message = err.Error()
+					} else {
+						statusCode = http.StatusOK
+						resp.Data = append(resp.Data, myToken)
+						resp.Message = "Successful"
+					}
 				}
 			}
 		}

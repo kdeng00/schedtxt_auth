@@ -20,7 +20,7 @@ func TestCreateServiceUserWithMock(t *testing.T) {
 	mockStore := mock.NewMockServiceUserStore()
 	handler := NewServiceHandler(cfg, mockStore)
 
-	testService := ServiceCreationRequest{Username: "swoon", Passphrase: "ewrewr329n12y3x2!2"}
+	testService := ServiceCreationRequest{Username: "swoon", Passphrase: "Ewrewr329n12y3x2!2"}
 	jsonValue, err := json.Marshal(testService)
 	assert.NoError(t, err, "Error marshaling request")
 
@@ -39,8 +39,12 @@ func TestLoginServiceUserWithMock(t *testing.T) {
 	var serviceUser user.ServiceUser
 	var hashedPassword string
 	var err error
-	unhashed := "9328nr29nudx3292m320!"
-	hashing := utility.HashMash{Password: unhashed}
+	unhashed := "A9328nr29nudx3292m320!"
+	hashing := utility.HashMash{}
+	if err := hashing.SetPassword(unhashed); err != nil {
+		assert.NoError(t, err, "Error setting password")
+	}
+
 	if hashedPassword, err = hashing.HashPassword(); err != nil {
 		assert.NoError(t, err, "Error hashing password: %v", err)
 	} else {

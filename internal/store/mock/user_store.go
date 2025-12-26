@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -37,8 +38,10 @@ func (m *MockUserStore) CreateUser(ctx context.Context, user *user.User) error {
 	}
 
 	if _, exists := m.UsersByUsername[user.Username]; exists {
-		return errors.New("User with email already exists")
+		return errors.New("User with username already exists")
 	}
+
+	user.Created = time.Now()
 
 	m.Users[user.Id] = user
 	m.UsersByUsername[user.Username] = user
@@ -111,4 +114,25 @@ func (m *MockUserStore) UserExists(ctx context.Context, username string) (bool, 
 	} else {
 		return exists, nil
 	}
+}
+
+func (m *MockUserStore) UpdatePassword(ctx context.Context, id uuid.UUID, password string) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.Error != nil {
+		return 0, m.Error
+	}
+
+	user, exists := m.Users[id]
+	if !exists {
+		return 0, errors.New("User not found")
+	}
+
+	user.Password = password
+
+	m.Users[id] = user
+	m.UsersByUsername[user.Username] = user
+
+	return 1, nil
 }
