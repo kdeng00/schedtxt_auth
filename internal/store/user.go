@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -18,6 +19,7 @@ type UserStore interface {
 	GetAllUsers(ctx context.Context) ([]*user.User, error)
 	UserExists(ctx context.Context, username string) (bool, error)
 	UpdatePassword(ctx context.Context, id uuid.UUID, password string) (int64, error)
+	UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLogin time.Time) (int64, error)
 }
 
 type PGUserStore struct {
@@ -118,6 +120,15 @@ func (s *PGUserStore) UserExists(ctx context.Context, username string) (bool, er
 func (s *PGUserStore) UpdatePassword(ctx context.Context, id uuid.UUID, password string) (int64, error) {
 	query := `UPDATE users SET password = $1 WHERE id = $2`
 	if affected, err := s.db.Exec(ctx, query, password, id); err != nil {
+		return 0, err
+	} else {
+		return affected.RowsAffected(), nil
+	}
+}
+
+func (s *PGUserStore) UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLogin time.Time) (int64, error) {
+	query := `UPDATE users SET last_login = $1 WHERE id = $2`
+	if affected, err := s.db.Exec(ctx, query, lastLogin, id); err != nil {
 		return 0, err
 	} else {
 		return affected.RowsAffected(), nil

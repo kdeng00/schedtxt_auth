@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"log"
 	"net/http"
+	"time"
 
 	"git.kundeng.us/phoenix/textsender-models/tx0/token"
 	"git.kundeng.us/phoenix/textsender-models/tx0/user"
@@ -153,6 +155,7 @@ func (s *ServiceHandler) Login(w http.ResponseWriter, r *http.Request) {
 					statusCode = http.StatusInternalServerError
 					resp.Message = "Not valid"
 				} else {
+					lastLogin := time.Now()
 					var tokGen utility.TokenGenerator
 					tokGen.SetHourOffset(8)
 					secretKey := config.GetSecretKey()
@@ -162,9 +165,16 @@ func (s *ServiceHandler) Login(w http.ResponseWriter, r *http.Request) {
 						statusCode = http.StatusInternalServerError
 						resp.Message = err.Error()
 					} else {
-						statusCode = http.StatusOK
-						resp.Data = append(resp.Data, myToken)
-						resp.Message = "Successful"
+						log.Println("Updating service user's last login")
+						if rowsAffected, err := s.ServiceStore.UpdateLastLogin(ctx, serviceUser.Id, lastLogin); err != nil {
+							statusCode = http.StatusInternalServerError
+							resp.Message = err.Error()
+						} else {
+							log.Println("Rows updated:", rowsAffected)
+							statusCode = http.StatusOK
+							resp.Data = append(resp.Data, myToken)
+							resp.Message = "Successful"
+						}
 					}
 				}
 			}

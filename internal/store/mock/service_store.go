@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 	"github.com/google/uuid"
@@ -100,4 +101,25 @@ func (m *MockServiceUserStore) GetWithId(ctx context.Context, id uuid.UUID) (*us
 	}
 
 	return nil, nil
+}
+
+func (m *MockServiceUserStore) UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLogin time.Time) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.Error != nil {
+		return 0, m.Error
+	}
+
+	serviceUser, exists := m.ServiceUsers[id]
+	if !exists {
+		return 0, errors.New("Service user not found")
+	}
+
+	serviceUser.LastLogin = &lastLogin
+
+	m.ServiceUsers[id] = serviceUser
+	m.ServiceUsersByUsername[serviceUser.Username] = serviceUser
+
+	return 1, nil
 }

@@ -136,3 +136,24 @@ func (m *MockUserStore) UpdatePassword(ctx context.Context, id uuid.UUID, passwo
 
 	return 1, nil
 }
+
+func (m *MockUserStore) UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLogin time.Time) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.Error != nil {
+		return 0, m.Error
+	}
+
+	user, exists := m.Users[id]
+	if !exists {
+		return 0, errors.New("User not found")
+	}
+
+	user.LastLogin = &lastLogin
+
+	m.Users[id] = user
+	m.UsersByUsername[user.Username] = user
+
+	return 1, nil
+}

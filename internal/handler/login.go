@@ -3,6 +3,7 @@ package handler
 import (
 	"log"
 	"net/http"
+	"time"
 
 	"git.kundeng.us/phoenix/textsender-models/tx0/token"
 	"git.kundeng.us/phoenix/textsender-models/tx0/user"
@@ -75,6 +76,7 @@ func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 					resp.Message = err.Error()
 				} else {
 					if hashing.CheckPasswordHash(req.Password, user.Password) {
+						lastLogin := time.Now()
 						var tokGen utility.TokenGenerator
 						secretKey := config.GetSecretKey()
 						tokGen.SetSecretKey(secretKey)
@@ -83,9 +85,16 @@ func (l *LoginHandler) Login(w http.ResponseWriter, r *http.Request) {
 							statusCode = http.StatusInternalServerError
 							resp.Message = "Error generating token"
 						} else {
-							statusCode = http.StatusOK
-							resp.Data = append(resp.Data, *myToken)
-							resp.Message = "Successful"
+							log.Println("Updating user's last login")
+							if rowsAffected, err := l.UserStore.UpdateLastLogin(ctx, user.Id, lastLogin); err != nil {
+								statusCode = http.StatusInternalServerError
+								resp.Message = err.Error()
+							} else {
+								log.Println("Rows updated:", rowsAffected)
+								statusCode = http.StatusOK
+								resp.Data = append(resp.Data, *myToken)
+								resp.Message = "Successful"
+							}
 						}
 					} else {
 						statusCode = http.StatusNotFound

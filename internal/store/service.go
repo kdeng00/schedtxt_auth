@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"git.kundeng.us/phoenix/textsender-models/tx0/user"
 	"github.com/google/uuid"
@@ -10,11 +11,13 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// TODO: Rename this to ServiceUserStore
 type ServiceStore interface {
 	CheckWithUsername(ctx context.Context, username string) (bool, error)
 	GetWithUsername(ctx context.Context, username string) (*user.ServiceUser, error)
 	GetWithId(ctx context.Context, id uuid.UUID) (*user.ServiceUser, error)
 	Create(ctx context.Context, serviceUser *user.ServiceUser) error
+	UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLogin time.Time) (int64, error)
 }
 
 type PGServiceStore struct {
@@ -80,4 +83,13 @@ func (s *PGServiceStore) Create(ctx context.Context, serviceUser *user.ServiceUs
 	return s.db.QueryRow(ctx, query, serviceUser.Username, serviceUser.Passphrase).Scan(
 		&serviceUser.Id, &serviceUser.Created,
 	)
+}
+
+func (s *PGServiceStore) UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLogin time.Time) (int64, error) {
+	query := `UPDATE service_users SET last_login = $1 WHERE id = $2`
+	if affected, err := s.db.Exec(ctx, query, lastLogin, id); err != nil {
+		return 0, err
+	} else {
+		return affected.RowsAffected(), nil
+	}
 }
