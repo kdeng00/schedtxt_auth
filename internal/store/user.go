@@ -20,6 +20,7 @@ type UserStore interface {
 	UserExists(ctx context.Context, username string) (bool, error)
 	UpdatePassword(ctx context.Context, id uuid.UUID, password string) (int64, error)
 	UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLogin time.Time) (int64, error)
+	UpdateName(ctx context.Context, firstname *string, lastname *string, usr *user.User) (int64, error)
 }
 
 type PGUserStore struct {
@@ -132,5 +133,41 @@ func (s *PGUserStore) UpdateLastLogin(ctx context.Context, id uuid.UUID, lastLog
 		return 0, err
 	} else {
 		return affected.RowsAffected(), nil
+	}
+}
+
+func (s *PGUserStore) UpdateName(ctx context.Context, firstname *string, lastname *string, usr *user.User) (int64, error) {
+	var query string
+
+	if firstname == nil && lastname == nil {
+		return 0, fmt.Errorf("Provided names are empty")
+	} else {
+		tableName := "users"
+		if firstname != nil && lastname != nil {
+			query = fmt.Sprintf("UPDATE %s SET first_name = $1, last_name = $2 WHERE id = $3", tableName)
+			if affected, err := s.db.Exec(ctx, query, firstname, lastname, usr.Id); err != nil {
+				return 0, err
+			} else {
+				usr.Firstname = firstname
+				usr.Lastname = lastname
+				return affected.RowsAffected(), nil
+			}
+		} else if firstname != nil {
+			query = fmt.Sprintf("UPDATE %s SET first_name = $1 WHERE id = $2", tableName)
+			if affected, err := s.db.Exec(ctx, query, firstname, usr.Id); err != nil {
+				return 0, err
+			} else {
+				usr.Firstname = firstname
+				return affected.RowsAffected(), nil
+			}
+		} else {
+			query = fmt.Sprintf("UPDATE %s SET last_name = $1 WHERE id = $2", tableName)
+			if affected, err := s.db.Exec(ctx, query, lastname, usr.Id); err != nil {
+				return 0, err
+			} else {
+				usr.Lastname = lastname
+				return affected.RowsAffected(), nil
+			}
+		}
 	}
 }

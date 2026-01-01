@@ -3,6 +3,7 @@ package mock
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -153,6 +154,38 @@ func (m *MockUserStore) UpdateLastLogin(ctx context.Context, id uuid.UUID, lastL
 	user.LastLogin = &lastLogin
 
 	m.Users[id] = user
+	m.UsersByUsername[user.Username] = user
+
+	return 1, nil
+}
+
+func (m *MockUserStore) UpdateName(ctx context.Context, firstname *string, lastname *string, usr *user.User) (int64, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if m.Error != nil {
+		return 0, m.Error
+	}
+
+	if firstname == nil && lastname == nil {
+		return 0, fmt.Errorf("Names not provided")
+	}
+
+	user, exists := m.Users[usr.Id]
+	if !exists {
+		return 0, errors.New("User not found")
+	}
+
+	if firstname != nil && lastname != nil {
+		user.Firstname = firstname
+		user.Lastname = lastname
+	} else if firstname != nil {
+		user.Firstname = firstname
+	} else {
+		user.Lastname = lastname
+	}
+
+	m.Users[usr.Id] = user
 	m.UsersByUsername[user.Username] = user
 
 	return 1, nil

@@ -1,11 +1,14 @@
 package endpoint
 
-// Endpoint for registering a user
-const Register = "/api/v1/register"
-const Login = "/api/v1/login"
-const UpdatePassword = "/api/v1/user/password/update"
+const (
+	// Endpoint for registering a user
+	Register       = "/api/v1/register"
+	Login          = "/api/v1/login"
+	UpdatePassword = "/api/v1/user/password/update"
+	UpdateName     = "/api/v1/user/name/update"
 
-const CreateServiceUser = "/api/v1/service/register"
-const LoginServiceUser = "/api/v1/service/login"
+	CreateServiceUser = "/api/v1/service/register"
+	LoginServiceUser  = "/api/v1/service/login"
 
-const TokenRefresh = "/api/v1/token/refresh"
+	TokenRefresh = "/api/v1/token/refresh"
+)

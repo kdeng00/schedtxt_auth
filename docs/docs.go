@@ -276,6 +276,63 @@ const docTemplate = `{
                 }
             }
         },
+        "/user/name/update": {
+            "patch": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Update the first or last name of a user (requires JWT)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update name of user",
+                "parameters": [
+                    {
+                        "description": "Data to update name of user",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateNameRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateNameResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateNameResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateNameResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/handler.UpdateNameResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/user/password/update": {
             "patch": {
                 "security": [
@@ -332,7 +389,7 @@ const docTemplate = `{
         "git_kundeng_us_phoenix_textsender-models_tx0_user.User": {
             "type": "object",
             "properties": {
-                "date_created": {
+                "created": {
                     "type": "string"
                 },
                 "first_name": {
@@ -497,6 +554,34 @@ const docTemplate = `{
                 }
             }
         },
+        "handler.UpdateNameRequest": {
+            "type": "object",
+            "properties": {
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "handler.UpdateNameResponse": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/git_kundeng_us_phoenix_textsender-models_tx0_user.User"
+                    }
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
         "handler.UpdatePasswordRequest": {
             "type": "object",
             "properties": {
@@ -537,6 +622,9 @@ const docTemplate = `{
                 "expires_in": {
                     "type": "integer"
                 },
+                "issued_at": {
+                    "type": "integer"
+                },
                 "token_type": {
                     "type": "string"
                 },
@@ -548,16 +636,20 @@ const docTemplate = `{
         "user.ServiceUser": {
             "type": "object",
             "properties": {
-                "date_created": {
+                "created": {
                     "type": "string"
                 },
                 "id": {
+                    "type": "string"
+                },
+                "last_login": {
                     "type": "string"
                 },
                 "passphrase": {
                     "type": "string"
                 },
                 "username": {
+                    "description": "TODO: Remove the omitempty tags at a later point",
                     "type": "string"
                 }
             }

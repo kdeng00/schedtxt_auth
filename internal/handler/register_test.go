@@ -34,3 +34,32 @@ func TestCreateUserWithMock(t *testing.T) {
 
 	assert.NotNil(t, response.Data[0].Id, "Id should not be nil")
 }
+
+func TestUpdateNameOfUser(t *testing.T) {
+	ctx := t.Context()
+	cfg := GetConfig()
+	userStore := mock.NewMockUserStore()
+
+	usr := GetTestUser()
+	if err := userStore.CreateUser(ctx, &usr); err != nil {
+		assert.NoError(t, err, "Error creating user")
+	}
+
+	testNameChange := UpdateNameRequest{}
+	testNameChange.Firstname = &[]string{"Bob"}[0]
+	testNameChange.Lastname = &[]string{"De-Buildor"}[0]
+	testNameChange.UserId = usr.Id
+	jsonValue, _ := json.Marshal(testNameChange)
+
+	req, _ := http.NewRequest("PATCH", endpoint.UpdateName, strings.NewReader(string(jsonValue)))
+	rr := httptest.NewRecorder()
+
+	handler := NewUserHandler(cfg, userStore)
+	handler.UpdateName(rr, req)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+
+	var response UpdateNameResponse
+	err := json.Unmarshal(rr.Body.Bytes(), &response)
+	assert.NoError(t, err)
+}

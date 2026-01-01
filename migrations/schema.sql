@@ -5,6 +5,8 @@ DROP TABLE IF EXISTS service_users CASCADE;
 
 CREATE TABLE users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    first_name TEXT NULL,
+    last_name TEXT NULL,
     phone_number TEXT NOT NULL,
     username TEXT NOT NULL,
     password TEXT NOT NULL,

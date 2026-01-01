@@ -2,7 +2,7 @@ basePath: /api/v1
 definitions:
   git_kundeng_us_phoenix_textsender-models_tx0_user.User:
     properties:
-      date_created:
+      created:
         type: string
       first_name:
         type: string
@@ -108,6 +108,24 @@ definitions:
       message:
         type: string
     type: object
+  handler.UpdateNameRequest:
+    properties:
+      first_name:
+        type: string
+      last_name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  handler.UpdateNameResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/git_kundeng_us_phoenix_textsender-models_tx0_user.User'
+        type: array
+      message:
+        type: string
+    type: object
   handler.UpdatePasswordRequest:
     properties:
       confirmed_password:
@@ -134,6 +152,8 @@ definitions:
         type: string
       expires_in:
         type: integer
+      issued_at:
+        type: integer
       token_type:
         type: string
       user_id:
@@ -141,13 +161,16 @@ definitions:
     type: object
   user.ServiceUser:
     properties:
-      date_created:
+      created:
         type: string
       id:
+        type: string
+      last_login:
         type: string
       passphrase:
         type: string
       username:
+        description: 'TODO: Remove the omitempty tags at a later point'
         type: string
     type: object
 host: localhost:9080
@@ -321,6 +344,42 @@ paths:
       summary: Obtain a refresh token
       tags:
       - refresh
+  /user/name/update:
+    patch:
+      consumes:
+      - application/json
+      description: Update the first or last name of a user (requires JWT)
+      parameters:
+      - description: Data to update name of user
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/handler.UpdateNameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.UpdateNameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handler.UpdateNameResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/handler.UpdateNameResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handler.UpdateNameResponse'
+      security:
+      - BearerAuth: []
+      summary: Update name of user
+      tags:
+      - users
   /user/password/update:
     patch:
       consumes:
