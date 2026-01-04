@@ -38,7 +38,6 @@ func (t *TokenGenerator) GenerateToken(usr any) (*token.Login, error) {
 	if t.hourOffset == 0 {
 		t.hourOffset = 4
 	}
-
 	expirationTime := time.Now().Add(t.hourOffset * time.Hour)
 
 	if claims, err := t.generateClaims(usr, TOKEN_TYPE, issuedAt, expirationTime); err != nil {
@@ -48,7 +47,7 @@ func (t *TokenGenerator) GenerateToken(usr any) (*token.Login, error) {
 		if tokenString, err := myToken.SignedString(t.SecretKey); err != nil {
 			return nil, err
 		} else {
-			return &token.Login{UserId: claims.UserId, AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix()}, nil
+			return &token.Login{UserId: claims.UserId, AccessToken: tokenString, TokenType: TOKEN_TYPE, ExpiresIn: expirationTime.Unix(), IssuedAt: issuedAt.Unix()}, nil
 		}
 	}
 }
@@ -60,14 +59,10 @@ func (t *TokenGenerator) VerifyToken(accessToken string) (bool, error) {
 		return false, nil
 	} else {
 		if tken.Valid {
-			if clms != nil {
-				if clms.UserId != uuid.Nil {
-					return true, nil
-				} else {
-					return false, fmt.Errorf("User Id was not set")
-				}
+			if clms.UserId != uuid.Nil {
+				return true, nil
 			} else {
-				return false, fmt.Errorf("Claims not parsed")
+				return false, fmt.Errorf("User Id was not set")
 			}
 		} else {
 			return false, fmt.Errorf("Invalid access token")
@@ -82,14 +77,10 @@ func (t *TokenGenerator) ExtractIdFromToken(accessToken string) (uuid.UUID, erro
 		return uuid.Nil, nil
 	} else {
 		if tken.Valid {
-			if clms != nil {
-				if clms.UserId != uuid.Nil {
-					return clms.UserId, nil
-				} else {
-					return uuid.Nil, fmt.Errorf("User Id was not set")
-				}
+			if clms.UserId != uuid.Nil {
+				return clms.UserId, nil
 			} else {
-				return uuid.Nil, fmt.Errorf("Claims not parsed")
+				return uuid.Nil, fmt.Errorf("User Id was not set")
 			}
 		} else {
 			return uuid.Nil, fmt.Errorf("Invalid access token")
