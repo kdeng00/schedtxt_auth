@@ -16,7 +16,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v6
       with:
-        go-version: '1.25.4' # You can specify a specific version or 'stable'
+        go-version: '1.26.1' # You can specify a specific version or 'stable'
 
     - name: Build
       run: |
@@ -49,7 +49,7 @@ jobs:
     runs-on: ubuntu-24.04
     services:
       postgres:
-        image: postgres:18.0
+        image: postgres:18.3-alpine
         env:
           POSTGRES_USER: ${{ secrets.DB_TEST_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
@@ -68,7 +68,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.25.4'
+          go-version: '1.26.1'
 
       - name: Install PostgreSQL client
         run: sudo apt update && sudo apt-get install -y postgresql-client
