@@ -36,6 +36,8 @@ jobs:
         cat > ~/.gitconfig << "EOF"
         [url "ssh://git@${{ secrets.GIT_HOST_ROOT }}"]
           insteadOf = https://${{ secrets.GIT_HOST_ROOT }}
+        [url "ssh://git@${{ secrets.GIT_HOST_ROOT }}"]
+          insteadOf = http://${{ secrets.GIT_HOST_ROOT }}
         EOF
 
         echo "Building binary"
@@ -49,7 +51,7 @@ jobs:
     runs-on: ubuntu-24.04
     services:
       postgres:
-        image: postgres:18.3-alpine
+        image: postgres:18.4-alpine
         env:
           POSTGRES_USER: ${{ secrets.DB_TEST_USER }}
           POSTGRES_PASSWORD: ${{ secrets.DB_TEST_PASSWORD }}
@@ -125,6 +127,8 @@ jobs:
           cat > ~/.gitconfig << "EOF"
           [url "ssh://git@${{ secrets.GIT_HOST_ROOT }}"]
             insteadOf = https://${{ secrets.GIT_HOST_ROOT }}
+          [url "ssh://git@${{ secrets.GIT_HOST_ROOT }}"]
+            insteadOf = http://${{ secrets.GIT_HOST_ROOT }}
           EOF
 
           go test -v ./...

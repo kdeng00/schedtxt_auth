@@ -11,7 +11,8 @@ RUN mkdir -p -m 0700 ~/.ssh && \
     ssh-keyscan git.kundeng.us >> ~/.ssh/known_hosts
 
 # Configure Git to use SSH for GitHub
-RUN git config --global url."ssh://git@git.kundeng.us".insteadOf "https://git.kundeng.us"
+RUN git config --global url."git@git.kundeng.us:".insteadOf "https://git.kundeng.us/" && \
+    git config --global url."git@git.kundeng.us:".insteadOf "http://git.kundeng.us/"
 
 # Set up the Go environment for private modules
 ENV GOPRIVATE=git.kundeng.us

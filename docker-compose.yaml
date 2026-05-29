@@ -18,7 +18,7 @@ services:
 
   # PostgreSQL Database Service
   auth_db:
-    image: postgres:18.3-alpine # Use an official Postgres image (Alpine variant is smaller)
+    image: postgres:18.4-alpine # Use an official Postgres image (Alpine variant is smaller)
     container_name: textsender_auth_db # Optional: Give the container a specific name
     environment:
       # These MUST match the user, password, and database name in the DATABASE_URL above
@@ -27,7 +27,7 @@ services:
       POSTGRES_DB: ${POSTGRES_AUTH_DB:-textsender_auth_db}
     volumes:
       # Persist database data using a named volume
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     ports: []
     healthcheck:
         # Checks if Postgres is ready to accept connections
