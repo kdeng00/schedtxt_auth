@@ -1,6 +1,7 @@
 pub mod config;
 pub mod db;
 pub mod hashing;
+pub mod repo;
 
 
 #[tokio::main]
