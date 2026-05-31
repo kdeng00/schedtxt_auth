@@ -99,13 +99,14 @@ pub mod user {
                 INSERT INTO "user" (username, password, phone, firstname, lastname, salt_id) 
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING id, created;
-            "#)
-            .bind(&user.username)
-            .bind(&user.password)
-            .bind(&user.phone_number)
-            .bind(&user.firstname)
-            .bind(&user.lastname)
-            .bind(user.salt_id)
+            "#,
+        )
+        .bind(&user.username)
+        .bind(&user.password)
+        .bind(&user.phone_number)
+        .bind(&user.firstname)
+        .bind(&user.lastname)
+        .bind(user.salt_id)
         .fetch_one(pool)
         .await
         .map_err(|e| {
