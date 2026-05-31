@@ -1,6 +1,5 @@
 pub mod service;
 
-/*
 pub mod user {
     use sqlx::Row;
 
@@ -13,7 +12,7 @@ pub mod user {
     pub async fn get(
         pool: &sqlx::PgPool,
         username: &String,
-    ) -> Result<icarus_models::user::User, sqlx::Error> {
+    ) -> Result<textsender_models::user::User, sqlx::Error> {
         let result = sqlx::query(
             r#"
         SELECT * FROM "user" WHERE username = $1
@@ -25,19 +24,16 @@ pub mod user {
 
         match result {
             Ok(r) => match r {
-                Some(r) => Ok(icarus_models::user::User {
+                Some(r) => Ok(textsender_models::user::User {
                     id: r.try_get("id")?,
                     username: r.try_get("username")?,
                     password: r.try_get("password")?,
-                    email: r.try_get("email")?,
-                    email_verified: r.try_get("email_verified")?,
-                    phone: r.try_get("phone")?,
+                    phone_number: r.try_get("phone_number")?,
                     salt_id: r.try_get("salt_id")?,
                     firstname: r.try_get("firstname")?,
                     lastname: r.try_get("lastname")?,
-                    date_created: r.try_get("date_created")?,
+                    created: r.try_get("created")?,
                     last_login: r.try_get("last_login")?,
-                    status: r.try_get("status")?,
                 }),
                 None => Err(sqlx::Error::RowNotFound),
             },
@@ -47,7 +43,7 @@ pub mod user {
 
     pub async fn update_last_login(
         pool: &sqlx::PgPool,
-        user: &icarus_models::user::User,
+        user: &textsender_models::user::User,
         time: &time::OffsetDateTime,
     ) -> Result<time::OffsetDateTime, sqlx::Error> {
         let result = sqlx::query(
@@ -96,22 +92,19 @@ pub mod user {
 
     pub async fn insert(
         pool: &sqlx::PgPool,
-        user: &icarus_models::user::User,
+        user: &textsender_models::user::User,
     ) -> Result<(uuid::Uuid, std::option::Option<time::OffsetDateTime>), sqlx::Error> {
         let row = sqlx::query(
             r#"
-                INSERT INTO "user" (username, password, email, phone, firstname, lastname, email_verified, status, salt_id) 
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                RETURNING id, date_created;
+                INSERT INTO "user" (username, password, phone, firstname, lastname, salt_id) 
+                VALUES ($1, $2, $3, $4, $5, $6)
+                RETURNING id, created;
             "#)
             .bind(&user.username)
             .bind(&user.password)
-            .bind(&user.email)
-            .bind(&user.phone)
+            .bind(&user.phone_number)
             .bind(&user.firstname)
             .bind(&user.lastname)
-            .bind(user.email_verified)
-            .bind(&user.status)
             .bind(user.salt_id)
         .fetch_one(pool)
         .await
@@ -146,7 +139,7 @@ pub mod salt {
     pub async fn get(
         pool: &sqlx::PgPool,
         id: &uuid::Uuid,
-    ) -> Result<icarus_models::user::salt::Salt, sqlx::Error> {
+    ) -> Result<textsender_models::user::Salt, sqlx::Error> {
         let result = sqlx::query(
             r#"
         SELECT * FROM "salt" WHERE id = $1
@@ -158,7 +151,7 @@ pub mod salt {
 
         match result {
             Ok(r) => match r {
-                Some(r) => Ok(icarus_models::user::salt::Salt {
+                Some(r) => Ok(textsender_models::user::Salt {
                     id: r.try_get("id")?,
                     salt: r.try_get("salt")?,
                 }),
@@ -170,7 +163,7 @@ pub mod salt {
 
     pub async fn insert(
         pool: &sqlx::PgPool,
-        salt: &icarus_models::user::salt::Salt,
+        salt: &textsender_models::user::Salt,
     ) -> Result<uuid::Uuid, sqlx::Error> {
         let row = sqlx::query(
             r#"
@@ -198,4 +191,3 @@ pub mod salt {
         }
     }
 }
-*/
