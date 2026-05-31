@@ -82,9 +82,9 @@ pub fn extract_id_from_token(key: &String, token: &String) -> Result<uuid::Uuid,
     }
 }
 
-pub const APP_TOKEN_TYPE: &str = "Icarus_App";
+pub const APP_TOKEN_TYPE: &str = "Textsender_App";
 pub const APP_SUBJECT: &str = "Something random";
-pub const SERVICE_TOKEN_TYPE: &str = "Icarus_Service";
+pub const SERVICE_TOKEN_TYPE: &str = "Textsender_Service";
 pub const SERVICE_SUBJECT: &str = "Service random";
 
 pub fn get_token_type(key: &String, token: &String) -> Result<String, std::io::Error> {

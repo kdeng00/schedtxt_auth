@@ -1,10 +1,9 @@
-
-
-
 use sqlx::postgres::PgPoolOptions;
 
 pub async fn create_pool() -> Result<sqlx::PgPool, sqlx::Error> {
-    let database_url = textsender_models::envy::environment::get_db_url().await.value;
+    let database_url = textsender_models::envy::environment::get_db_url()
+        .await
+        .value;
     println!("Database url: {database_url}");
 
     PgPoolOptions::new()
@@ -21,4 +20,3 @@ pub async fn migrations(pool: &sqlx::PgPool) {
         .await
         .expect("Failed to run migrations");
 }
-

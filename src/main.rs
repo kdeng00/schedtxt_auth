@@ -4,7 +4,6 @@ pub mod hashing;
 pub mod repo;
 pub mod token_stuff;
 
-
 #[tokio::main]
 async fn main() {
     // initialize tracing

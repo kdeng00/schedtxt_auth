@@ -48,4 +48,3 @@ pub async fn get_passphrase(
         Err(err) => Err(err),
     }
 }
-
