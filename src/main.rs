@@ -2,6 +2,7 @@ pub mod config;
 pub mod db;
 pub mod hashing;
 pub mod repo;
+pub mod token_stuff;
 
 
 #[tokio::main]

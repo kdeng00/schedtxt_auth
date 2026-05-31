@@ -2241,10 +2241,11 @@ dependencies = [
 [[package]]
 name = "textsender_models"
 version = "0.3.0"
-source = "git+ssh://git@git.kundeng.us/phoenix/textsender-models.git?tag=v0.3.0-v0.3.0-migrate-1340440fec-111#1340440fecd79463bad053539c47e65d8da73194"
+source = "git+ssh://git@git.kundeng.us/phoenix/textsender-models.git?tag=v0.3.0-17-f920e91ec0-111#f920e91ec07487dbe1a72207a8bd2be84c0e95b9"
 dependencies = [
  "const_format",
  "dotenvy",
+ "josekit",
  "rand 0.10.1",
  "serde",
  "serde_json",
