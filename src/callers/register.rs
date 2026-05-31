@@ -29,7 +29,7 @@ pub mod response {
     #[derive(Deserialize, Serialize, utoipa::ToSchema)]
     pub struct Response {
         pub message: String,
-        pub data: Vec<icarus_models::user::User>,
+        pub data: Vec<textsender_models::user::User>,
     }
 }
 
@@ -67,15 +67,14 @@ pub async fn register_user(
     };
 
     if registration_enabled {
-        let mut user = icarus_models::user::User {
+        let mut user = textsender_models::user::User {
             username: payload.username.clone(),
             password: payload.password.clone(),
-            email: payload.email.clone(),
-            phone: payload.phone.clone(),
+            // email: payload.email.clone(),
+            phone_number: payload.phone.clone(),
             firstname: payload.firstname.clone(),
             lastname: payload.lastname.clone(),
-            status: String::from("Active"),
-            email_verified: true,
+            // email_verified: true,
             ..Default::default()
         };
 
@@ -91,7 +90,7 @@ pub async fn register_user(
                     )
                 } else {
                     let salt_string = hashing::generate_salt().unwrap();
-                    let mut salt = textsender_models::user::salt::Salt::default();
+                    let mut salt = textsender_models::user::Salt::default();
                     let generated_salt = salt_string;
                     salt.salt = generated_salt.to_string();
                     salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
@@ -103,7 +102,7 @@ pub async fn register_user(
                     match repo::user::insert(&pool, &user).await {
                         Ok((id, date_created)) => {
                             user.id = id;
-                            user.date_created = date_created;
+                            user.created = date_created;
                             (
                                 StatusCode::CREATED,
                                 Json(response::Response {

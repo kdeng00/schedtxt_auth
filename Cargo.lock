@@ -2241,7 +2241,7 @@ dependencies = [
 [[package]]
 name = "textsender_models"
 version = "0.3.0"
-source = "git+ssh://git@git.kundeng.us/phoenix/textsender-models.git?tag=v0.3.0-17-f920e91ec0-111#f920e91ec07487dbe1a72207a8bd2be84c0e95b9"
+source = "git+ssh://git@git.kundeng.us/phoenix/textsender-models.git?tag=v0.3.0-19-cf112a468d-111#cf112a468d4e653ec49c55bc890d59b730c85f79"
 dependencies = [
  "const_format",
  "dotenvy",
@@ -2250,6 +2250,7 @@ dependencies = [
  "serde",
  "serde_json",
  "time",
+ "utoipa",
  "uuid",
 ]
 
@@ -2577,6 +2578,7 @@ dependencies = [
  "quote",
  "regex",
  "syn",
+ "uuid",
 ]
 
 [[package]]

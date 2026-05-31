@@ -21,7 +21,7 @@ time = { version = "0.3.47", features = ["macros", "serde"] }
 josekit = { version = "0.10.3" }
 utoipa = { version = "5.5.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
-textsender_models = { git = "ssh://git@git.kundeng.us/phoenix/textsender-models.git", tag = "v0.3.0-17-f920e91ec0-111" }
+textsender_models = { git = "ssh://git@git.kundeng.us/phoenix/textsender-models.git", tag = "v0.3.0-19-cf112a468d-111" }
 # icarus_envy = { git = "ssh://git@git.kundeng.us/phoenix/icarus_envy.git", tag = "v0.7.0" }
 # dotenvy = { version = "0.15.7" }
 # const_format = { version = "0.2.36" }
