@@ -11,7 +11,13 @@ CREATE TABLE users (
     username TEXT NOT NULL,
     password TEXT NOT NULL,
     created timestamptz DEFAULT now(),
-    last_login timestamptz NULL
+    last_login timestamptz NULL,
+    salt_id UUID NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS "salt" (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    salt TEXT NOT NULL
 );
 
 CREATE TABLE service_users (
