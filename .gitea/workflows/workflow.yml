@@ -1,0 +1,145 @@
+name: Rust Build
+
+on:
+  push:
+    branches:
+      - v0.2.0
+      - v0.2.0
+  pull_request:
+    branches:
+      - v0.2.0
+      - v0.2.0
+
+jobs:
+  check:
+    name: Check
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.95
+      - run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
+          chmod 600 ~/.ssh/textsender-models_deploy_key
+          ssh-keyscan ${{ secret.MYHOST }} >> ~/.ssh/known_hosts
+
+          eval $(ssh-agent -s)
+          ssh-add -v ~/.ssh/textsender-models_deploy_key
+
+          cargo check
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-24.04
+    # --- Add database service definition ---
+    services:
+      postgres:
+        image: postgres:18.3-alpine
+        env:
+          # Use secrets for DB init, with fallbacks for flexibility
+          POSTGRES_USER: ${{ secrets.DB_TEST_USER || 'testuser' }}
+          POSTGRES_PASSWORD: ${{ secrets.DB_TEST_PASSWORD || 'testpassword' }}
+          POSTGRES_DB: ${{ secrets.DB_TEST_NAME || 'testdb' }}
+        # Options to wait until the database is ready
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.95
+      # --- Add this step for explicit verification ---
+      - name: Verify Docker Environment
+        run: |
+          echo "Runner User Info:"
+          id
+          echo "Checking Docker Version:"
+          docker --version
+          echo "Checking Docker Daemon Status (info):"
+          docker info
+          echo "Checking Docker Daemon Status (ps):"
+          docker ps -a
+          echo "Docker environment check complete."
+        # NOTE: Do NOT use continue-on-error here.
+        # If Docker isn't working as expected, the job SHOULD fail here.
+      - name: Run tests
+        env:
+          # Define DATABASE_URL for tests to use
+          DATABASE_URL: postgresql://${{ secrets.DB_TEST_USER || 'testuser' }}:${{ secrets.DB_TEST_PASSWORD || 'testpassword' }}@postgres:5432/${{ secrets.DB_TEST_NAME || 'testdb' }}
+          RUST_LOG: info # Optional: configure test log level
+          SECRET_KEY: ${{ secrets.TOKEN_SECRET_KEY }}
+          # Make SSH agent available if tests fetch private dependencies
+          SSH_AUTH_SOCK: ${{ env.SSH_AUTH_SOCK }}
+          ENABLE_REGISTRATION: 'TRUE'
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
+          chmod 600 ~/.ssh/textsender-models_deploy_key
+          ssh-keyscan ${{ secret.MYHOST }} >> ~/.ssh/known_hosts
+
+          eval $(ssh-agent -s)
+          ssh-add -v ~/.ssh/textsender-models_deploy_key
+
+          cargo test
+
+  fmt:
+    name: Rustfmt
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.95
+      - run: rustup component add rustfmt
+      - run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
+          chmod 600 ~/.ssh/textsender-models_deploy_key
+          ssh-keyscan ${{ secret.MYHOST }} >> ~/.ssh/known_hosts
+
+          eval $(ssh-agent -s)
+          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          cargo fmt --all -- --check
+
+  clippy:
+    name: Clippy
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.95
+      - run: rustup component add clippy
+      - run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
+          chmod 600 ~/.ssh/textsender-models_deploy_key
+          ssh-keyscan ${{ secret.MYHOST }} >> ~/.ssh/known_hosts
+
+          eval $(ssh-agent -s)
+          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          cargo clippy -- -D warnings
+
+  build:
+    name: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: 1.95
+      - run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
+          chmod 600 ~/.ssh/textsender-models_deploy_key
+          ssh-keyscan ${{ secret.MYHOST }} >> ~/.ssh/known_hosts
+
+          eval $(ssh-agent -s)
+          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          cargo build --release
