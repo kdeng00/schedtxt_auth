@@ -1,4 +1,3 @@
-pub mod env;
 
 
 #[tokio::main]
