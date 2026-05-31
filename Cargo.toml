@@ -23,8 +23,11 @@ utoipa = { version = "5.5.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 textsender_models = { git = "ssh://git@git.kundeng.us/phoenix/textsender-models.git", tag = "v0.3.0-v0.3.0-migrate-638da70649-111" }
 # icarus_envy = { git = "ssh://git@git.kundeng.us/phoenix/icarus_envy.git", tag = "v0.7.0" }
+dotenvy = { version = "0.15.7" }
+const_format = { version = "0.2.36" }
 
 [dev-dependencies]
 http-body-util = { version = "0.1.3" }
 url = { version = "2.5.8" }
 once_cell = { version = "1.21.4" } # Useful for lazy initialization in tests/app setup
+async-std = { version = "1.13.2" }
