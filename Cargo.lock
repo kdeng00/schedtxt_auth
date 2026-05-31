@@ -1973,6 +1973,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sqlx",
+ "textsender_models",
  "time",
  "tokio",
  "tower",
@@ -1981,6 +1982,18 @@ dependencies = [
  "url",
  "utoipa",
  "utoipa-swagger-ui",
+ "uuid",
+]
+
+[[package]]
+name = "textsender_models"
+version = "0.3.0"
+source = "git+ssh://git@git.kundeng.us/phoenix/textsender-models.git?tag=v0.3.0-v0.3.0-migrate-638da70649-111#638da70649b49735fa8244c95e25f9f8a28f1eac"
+dependencies = [
+ "rand 0.10.1",
+ "serde",
+ "serde_json",
+ "time",
  "uuid",
 ]
 
