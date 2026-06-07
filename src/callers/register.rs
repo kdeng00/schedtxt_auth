@@ -8,18 +8,15 @@ pub mod request {
 
     #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
     pub struct Request {
-        #[serde(skip_serializing_if = "String::is_empty")]
         pub username: String,
-        #[serde(skip_serializing_if = "String::is_empty")]
         pub password: String,
-        #[serde(skip_serializing_if = "String::is_empty")]
-        pub email: String,
-        #[serde(skip_serializing_if = "String::is_empty")]
-        pub phone: String,
-        #[serde(skip_serializing_if = "String::is_empty")]
-        pub firstname: String,
-        #[serde(skip_serializing_if = "String::is_empty")]
-        pub lastname: String,
+        pub phone_number: String,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub email: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub firstname: Option<String>,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        pub lastname: Option<String>,
     }
 }
 
@@ -71,16 +68,19 @@ pub async fn register_user(
             username: payload.username.clone(),
             password: payload.password.clone(),
             // email: payload.email.clone(),
-            phone_number: payload.phone.clone(),
-            firstname: payload.firstname.clone(),
-            lastname: payload.lastname.clone(),
+            phone_number: payload.phone_number.clone(),
             // email_verified: true,
             ..Default::default()
         };
 
+        user.firstname = payload.firstname.unwrap_or_default();
+        user.lastname = payload.lastname.unwrap_or_default();
+
+        println!("Checking if user exists");
         match repo::user::exists(&pool, &user.username).await {
             Ok(res) => {
                 if res {
+                    println!("Already exists");
                     (
                         StatusCode::BAD_REQUEST,
                         Json(response::Response {
@@ -89,16 +89,20 @@ pub async fn register_user(
                         }),
                     )
                 } else {
+                    println!("Good to create");
+                    println!("Generate salt string");
                     let salt_string = hashing::generate_salt().unwrap();
                     let mut salt = textsender_models::user::Salt::default();
                     let generated_salt = salt_string;
                     salt.salt = generated_salt.to_string();
+                    println!("Creating salt");
                     salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
                     user.salt_id = salt.id;
                     let hashed_password =
                         hashing::hash_password(&user.password, &generated_salt).unwrap();
                     user.password = hashed_password;
 
+                    println!("Creating user");
                     match repo::user::insert(&pool, &user).await {
                         Ok((id, date_created)) => {
                             user.id = id;

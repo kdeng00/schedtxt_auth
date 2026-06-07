@@ -15,7 +15,7 @@ pub mod user {
     ) -> Result<textsender_models::user::User, sqlx::Error> {
         let result = sqlx::query(
             r#"
-        SELECT * FROM "user" WHERE username = $1
+        SELECT id, username, password, phone_number, salt_id, firstname, lastname, created, last_login FROM "user" WHERE username = $1
         "#,
         )
         .bind(username)
@@ -85,8 +85,21 @@ pub mod user {
         .await;
 
         match result {
-            Ok(r) => Ok(r.is_some()),
-            Err(e) => Err(e),
+            Ok(r) => match r {
+                Some(row) => {
+                    if row.is_empty() {
+                        Ok(false)
+                    } else {
+                        Ok(true)
+                    }
+                }
+                None => Ok(false),
+            },
+            Err(e) => {
+                eprintln!("What??");
+                eprintln!("Error: {e:?}");
+                Err(e)
+            }
         }
     }
 
@@ -96,7 +109,7 @@ pub mod user {
     ) -> Result<(uuid::Uuid, std::option::Option<time::OffsetDateTime>), sqlx::Error> {
         let row = sqlx::query(
             r#"
-                INSERT INTO "user" (username, password, phone, firstname, lastname, salt_id) 
+                INSERT INTO "user" (username, password, phone_number, firstname, lastname, salt_id) 
                 VALUES ($1, $2, $3, $4, $5, $6)
                 RETURNING id, created;
             "#,
@@ -117,7 +130,7 @@ pub mod user {
         let result = InsertedData {
             id: row.try_get("id").map_err(|_e| sqlx::Error::RowNotFound)?,
             date_created: row
-                .try_get("date_created")
+                .try_get("created")
                 .map_err(|_e| sqlx::Error::RowNotFound)?,
         };
 
@@ -143,7 +156,7 @@ pub mod salt {
     ) -> Result<textsender_models::user::Salt, sqlx::Error> {
         let result = sqlx::query(
             r#"
-        SELECT * FROM "salt" WHERE id = $1
+        SELECT id, salt FROM "salt" WHERE id = $1
         "#,
         )
         .bind(id)
