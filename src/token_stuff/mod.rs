@@ -11,10 +11,6 @@ pub const MESSAGE: &str = "Something random";
 pub const ISSUER: &str = "textsender_auth";
 pub const AUDIENCE: &str = "textsender";
 
-pub fn get_issued() -> time::Result<time::OffsetDateTime> {
-    Ok(time::OffsetDateTime::now_utc())
-}
-
 pub fn get_expiration(issued: &time::OffsetDateTime) -> Result<time::OffsetDateTime, time::Error> {
     let duration_expire = time::Duration::hours(4);
     Ok(*issued + duration_expire)
