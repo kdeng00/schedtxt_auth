@@ -11,4 +11,6 @@ pub mod endpoints {
     pub const DBTEST: &str = "/api/v1/test/db";
     /// Endpoint constant for service user registration
     pub const REGISTER_SERVICE_USER: &str = "/api/v1/service/register";
+    /// Endpoint constant for service login user
+    pub const LOGIN_SERVICE_USER: &str = "/api/v1/service/login";
 }

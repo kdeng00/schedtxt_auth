@@ -35,7 +35,7 @@ jobs:
     # --- Add database service definition ---
     services:
       postgres:
-        image: postgres:18.3-alpine
+        image: postgres:18.4-alpine
         env:
           # Use secrets for DB init, with fallbacks for flexibility
           POSTGRES_USER: ${{ secrets.DB_TEST_USER || 'testuser' }}

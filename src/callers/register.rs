@@ -252,7 +252,7 @@ pub async fn register_service_user(
                         salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
                         let mut service_user = textsender_models::user::ServiceUser {
                             username: payload.username.clone(),
-                            passphrase: hashing::hash_password(&payload.username, &generate_salt)
+                            passphrase: hashing::hash_password(&payload.passphrase, &generate_salt)
                                 .unwrap(),
                             salt_id: salt.id,
                             ..Default::default()
@@ -261,9 +261,10 @@ pub async fn register_service_user(
                         println!("Creating user");
 
                         match repo::service::insert(&pool, &service_user).await {
-                            Ok(created) => {
+                            Ok((service_user_id, created)) => {
                                 resp.message = String::from(super::messages::SUCCESSFUL_MESSAGE);
                                 service_user.created = Some(created);
+                                service_user.id = service_user_id;
                                 resp.data.push(service_user);
                                 (axum::http::StatusCode::CREATED, axum::Json(resp))
                             }
