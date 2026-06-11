@@ -97,6 +97,10 @@ pub mod init {
                 callers::endpoints::REGISTER,
                 post(callers::register::register_user),
             )
+            .route(
+                callers::endpoints::REGISTER_SERVICE_USER,
+                post(callers::register::register_service_user),
+            )
             .route(callers::endpoints::LOGIN, post(callers::login::user_login))
             .layer(cors::configure_cors().await)
     }

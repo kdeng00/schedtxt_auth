@@ -18,6 +18,29 @@ pub mod request {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub lastname: Option<String>,
     }
+
+    #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
+    pub struct RegisterServiceUserRequest {
+        pub username: String,
+        pub passphrase: String,
+    }
+
+    impl RegisterServiceUserRequest {
+        pub fn is_empty(&self) -> (bool, Option<String>) {
+            if self.username.is_empty() && self.passphrase.is_empty() {
+                (
+                    true,
+                    Some(String::from("Username and Passphrase are empty")),
+                )
+            } else if self.username.is_empty() {
+                (true, Some(String::from("Username is empty")))
+            } else if self.passphrase.is_empty() {
+                (true, Some(String::from("Passphrase is empty")))
+            } else {
+                (false, None)
+            }
+        }
+    }
 }
 
 pub mod response {
@@ -28,6 +51,21 @@ pub mod response {
         pub message: String,
         pub data: Vec<textsender_models::user::User>,
     }
+
+    #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
+    pub struct RegisterServiceUserResponse {
+        pub message: String,
+        pub data: Vec<textsender_models::user::ServiceUser>,
+    }
+}
+
+fn generate_the_salt() -> (
+    argon2::password_hash::SaltString,
+    textsender_models::user::Salt,
+) {
+    let salt_string = hashing::generate_salt().unwrap();
+    let salt = textsender_models::user::Salt::default();
+    (salt_string, salt)
 }
 
 /// Endpoint to register a user
@@ -91,10 +129,8 @@ pub async fn register_user(
                 } else {
                     println!("Good to create");
                     println!("Generate salt string");
-                    let salt_string = hashing::generate_salt().unwrap();
-                    let mut salt = textsender_models::user::Salt::default();
-                    let generated_salt = salt_string;
-                    salt.salt = generated_salt.to_string();
+
+                    let (generated_salt, mut salt) = generate_the_salt();
                     println!("Creating salt");
                     salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
                     user.salt_id = salt.id;
@@ -158,5 +194,100 @@ async fn is_registration_enabled() -> Result<bool, std::io::Error> {
         Err(std::io::Error::other(
             "Could not determine value of ENABLE_REGISTRATION",
         ))
+    }
+}
+
+/// Endpoint to register a service user
+#[utoipa::path(
+    post,
+    path = super::endpoints::REGISTER_SERVICE_USER,
+    request_body(
+        content = request::RegisterServiceUserRequest,
+        description = "Data required to register service user",
+        content_type = "application/json"
+    ),
+    responses(
+        (status = 201, description = "Service user created", body = response::RegisterServiceUserResponse),
+        (status = 400, description = "Issue creating service user", body = response::RegisterServiceUserResponse),
+        (status = 406, description = "Cannot create service user", body = response::RegisterServiceUserResponse),
+        (status = 500, description = "Issue creating service user", body = response::RegisterServiceUserResponse),
+    )
+)]
+pub async fn register_service_user(
+    axum::Extension(pool): axum::Extension<sqlx::PgPool>,
+    Json(payload): Json<request::RegisterServiceUserRequest>,
+) -> (
+    axum::http::StatusCode,
+    axum::Json<response::RegisterServiceUserResponse>,
+) {
+    let mut resp = response::RegisterServiceUserResponse {
+        ..Default::default()
+    };
+
+    let registration_enabled = match is_registration_enabled().await {
+        Ok(value) => value,
+        Err(err) => {
+            eprintln!("Error: {err:?}");
+            resp.message = String::from("Registration check failed");
+            return (axum::http::StatusCode::INTERNAL_SERVER_ERROR, Json(resp));
+        }
+    };
+
+    let (res, msg) = payload.is_empty();
+    if res {
+        resp.message = msg.unwrap();
+        (axum::http::StatusCode::BAD_REQUEST, axum::Json(resp))
+    } else {
+        if registration_enabled {
+            match repo::service::exists(&pool, &payload.username).await {
+                Ok(exists) => {
+                    if exists {
+                        resp.message = String::from("Invalid");
+                        (
+                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                            axum::Json(resp),
+                        )
+                    } else {
+                        let (generate_salt, mut salt) = generate_the_salt();
+                        salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
+                        let mut service_user = textsender_models::user::ServiceUser {
+                            username: payload.username.clone(),
+                            passphrase: hashing::hash_password(&payload.username, &generate_salt)
+                                .unwrap(),
+                            salt_id: salt.id,
+                            ..Default::default()
+                        };
+
+                        println!("Creating user");
+
+                        match repo::service::insert(&pool, &service_user).await {
+                            Ok(created) => {
+                                resp.message = String::from(super::messages::SUCCESSFUL_MESSAGE);
+                                service_user.created = Some(created);
+                                resp.data.push(service_user);
+                                (axum::http::StatusCode::CREATED, axum::Json(resp))
+                            }
+                            Err(err) => {
+                                resp.message = err.to_string();
+                                (
+                                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                    axum::Json(resp),
+                                )
+                            }
+                        }
+                    }
+                }
+                Err(err) => {
+                    resp.message = err.to_string();
+                    (
+                        axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                        axum::Json(resp),
+                    )
+                }
+            }
+        } else {
+            resp.message = String::from("Registration is not enabled");
+            (axum::http::StatusCode::NOT_ACCEPTABLE, Json(resp))
+        }
     }
 }

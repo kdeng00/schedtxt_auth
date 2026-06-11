@@ -75,6 +75,7 @@ mod db_mgr {
 pub mod requests {
     use tower::ServiceExt; // for `call`, `oneshot`, and `ready`
 
+    /// Function to call register user endpoint
     pub async fn register_user(
         app: &axum::Router,
     ) -> Result<axum::response::Response, std::convert::Infallible> {
@@ -95,6 +96,7 @@ pub mod requests {
         app.clone().oneshot(req).await
     }
 
+    /// Function to call login user endpoint
     pub async fn login_user(
         app: &axum::Router,
         username: &str,
@@ -113,13 +115,54 @@ pub mod requests {
 
         app.clone().oneshot(req).await
     }
+
+    /// Function to call register service user endpoint
+    pub async fn register_service_user(
+        app: &axum::Router,
+    ) -> Result<axum::response::Response, std::convert::Infallible> {
+        let payload = serde_json::json!({
+            "username": String::from(super::TEST_SERVICE_USERNAME),
+            "passphrase": String::from(super::TEST_SERVICE_PASSPHRASE),
+        });
+        let req = axum::http::Request::builder()
+            .method(axum::http::Method::POST)
+            .uri(super::callers::endpoints::REGISTER_SERVICE_USER)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(axum::body::Body::from(payload.to_string()))
+            .unwrap();
+
+        app.clone().oneshot(req).await
+    }
 }
 
+/// Test user firstname
 const TEST_FIRSTNAME: &str = "Billy";
+/// Test user lastname
 const TEST_LASTNAME: &str = "Bob";
+/// Test user username
 const TEST_USERNAME: &str = "BillyBob01";
+/// Test user password
 const TEST_PASSWORD: &str = "923ndcry392qryudx328qrdy328r";
+/// Test user phone number
 const TEST_PHONE_NUMBER: &str = "+10123456789";
+
+/// Test service username
+const TEST_SERVICE_USERNAME: &str = "swoon";
+/// Test service passphrase
+const TEST_SERVICE_PASSPHRASE: &str = "4n5cf349tfy34w857ty39wq45nfdq23";
+
+async fn convert_response<T>(response: axum::response::Response) -> Result<T, std::io::Error>
+where
+    T: serde::de::DeserializeOwned,
+{
+    match axum::body::to_bytes(response.into_body(), usize::MAX).await {
+        Ok(body) => {
+            let resp: T = serde_json::from_slice(&body).unwrap();
+            Ok(resp)
+        }
+        Err(err) => Err(std::io::Error::other(err.to_string())),
+    }
+}
 
 async fn register_user(
     app: &axum::Router,
@@ -193,23 +236,8 @@ async fn test_register_user() {
 
     let app = init::routes().await.layer(axum::Extension(pool));
 
-    match requests::register_user(&app).await {
-        Ok(response) => {
-            assert_eq!(
-                axum::http::StatusCode::CREATED,
-                response.status(),
-                "Status does not match {:?}",
-                response.status()
-            );
-            let body = axum::body::to_bytes(response.into_body(), usize::MAX)
-                .await
-                .unwrap();
-            let parsed_body: callers::register::response::Response =
-                serde_json::from_slice(&body).unwrap();
-            assert!(parsed_body.data.len() > 0, "No data returned");
-
-            let returned_user = &parsed_body.data[0];
-
+    match register_user(&app).await {
+        Ok(returned_user) => {
             assert_eq!(
                 TEST_USERNAME, returned_user.username,
                 "Error with returned user"
@@ -261,6 +289,59 @@ async fn test_login_user() {
                 assert!(false, "Error: {err:?}");
             }
         },
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+
+    match db_mgr::drop_database(&tm_pool, &db_name).await {
+        Ok(()) => {}
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_register_service_user() {
+    let tm_pool = db_mgr::get_pool().await.unwrap();
+    let db_name = db_mgr::generate_db_name().await;
+
+    match db_mgr::create_database(&tm_pool, &db_name).await {
+        Ok(_) => {
+            println!("Success");
+        }
+        Err(e) => {
+            assert!(false, "Error: {:?}", e.to_string());
+        }
+    }
+
+    let pool = db_mgr::connect_to_db(&db_name).await.unwrap();
+
+    db::init::migrations(&pool).await;
+
+    let app = init::routes().await.layer(axum::Extension(pool));
+
+    match requests::register_service_user(&app).await {
+        Ok(response) => {
+            match convert_response::<callers::register::response::RegisterServiceUserResponse>(
+                response,
+            )
+            .await
+            {
+                Ok(resp) => {
+                    assert!(resp.data.len() > 0, "No service user was created");
+                    let service_user = &resp.data[0];
+                    assert_eq!(
+                        TEST_SERVICE_USERNAME, service_user.username,
+                        "Service username does not match"
+                    );
+                }
+                Err(err) => {
+                    assert!(false, "Error: {err:?}");
+                }
+            }
+        }
         Err(err) => {
             assert!(false, "Error: {err:?}");
         }

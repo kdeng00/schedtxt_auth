@@ -25,5 +25,6 @@ CREATE TABLE IF NOT EXISTS "service_user" (
     username TEXT NOT NULL,
     passphrase TEXT NOT NULL,
     created TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    last_login timestamptz NULL
+    last_login timestamptz NULL,
+    salt_id UUID NOT NULL
 );
