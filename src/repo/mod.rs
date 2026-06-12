@@ -130,6 +130,34 @@ pub mod user {
         }
     }
 
+    pub async fn update_name(
+        pool: &sqlx::PgPool,
+        id: &uuid::Uuid,
+        firstname: &str,
+        lastname: &str,
+    ) -> Result<(), sqlx::Error> {
+        match sqlx::query(
+            r#"
+            UPDATE "user" SET firstname = $1, lastname = $2 WHERE id = $3
+            "#,
+        )
+        .bind(firstname)
+        .bind(lastname)
+        .bind(id)
+        .execute(pool)
+        .await
+        {
+            Ok(row) => {
+                if row.rows_affected() > 0 {
+                    Ok(())
+                } else {
+                    Err(sqlx::Error::RowNotFound)
+                }
+            }
+            Err(err) => Err(err),
+        }
+    }
+
     pub async fn exists(pool: &sqlx::PgPool, username: &String) -> Result<bool, sqlx::Error> {
         let result = sqlx::query(
             r#"

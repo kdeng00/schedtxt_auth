@@ -114,6 +114,10 @@ pub mod init {
                 callers::endpoints::UPDATE_PASSWORD,
                 patch(callers::login::update_password),
             )
+            .route(
+                callers::endpoints::UPDATE_USER_NAME,
+                patch(callers::login::update_name_of_user),
+            )
             .layer(cors::configure_cors().await)
     }
 

@@ -59,6 +59,24 @@ pub mod request {
             }
         }
     }
+
+    #[derive(Deserialize, utoipa::ToSchema)]
+    pub struct UserUpdateNameRequest {
+        pub user_id: uuid::Uuid,
+        pub firstname: String,
+        pub lastname: String,
+    }
+
+    impl UserUpdateNameRequest {
+        pub fn is_valid(&self) -> (bool, Option<String>) {
+            if self.user_id.is_nil() || self.firstname.is_empty() || self.lastname.is_empty() {
+                let reason = String::from("Missing fields");
+                (false, Some(reason))
+            } else {
+                (true, None)
+            }
+        }
+    }
 }
 
 pub mod response {
@@ -95,6 +113,12 @@ pub mod response {
     pub struct UpdatePasswordResponse {
         pub message: String,
         pub data: Vec<uuid::Uuid>,
+    }
+
+    #[derive(Deserialize, Serialize, utoipa::ToSchema)]
+    pub struct UserUpdateNameResponse {
+        pub message: String,
+        pub data: Vec<textsender_models::user::User>,
     }
 }
 
@@ -712,6 +736,95 @@ pub async fn update_password(
                     ),
                 }
             }
+        }
+    }
+}
+
+/// Endpoint for a updating password
+#[utoipa::path(
+    patch,
+    path = super::endpoints::UPDATE_USER_NAME,
+    request_body(
+        content = request::UserUpdateNameRequest,
+        description = "Data required to update name of a user",
+        content_type = "application/json"
+    ),
+    responses(
+        (status = 200, description = "Names were updated", body = response::UserUpdateNameResponse),
+        (status = 304, description = "Nothing to change", body = response::UserUpdateNameResponse),
+        (status = 400, description = "Bad data", body = response::UserUpdateNameResponse),
+        (status = 500, description = "Something went wrong", body = response::UserUpdateNameResponse)
+    )
+)]
+pub async fn update_name_of_user(
+    axum::Extension(pool): axum::Extension<sqlx::PgPool>,
+    axum::Json(payload): axum::Json<request::UserUpdateNameRequest>,
+) -> (
+    axum::http::StatusCode,
+    axum::Json<response::UserUpdateNameResponse>,
+) {
+    let (valid_request, reason) = payload.is_valid();
+    if !valid_request {
+        (
+            axum::http::StatusCode::BAD_REQUEST,
+            axum::Json(response::UserUpdateNameResponse {
+                message: reason.unwrap_or_default(),
+                data: Vec::new(),
+            }),
+        )
+    } else {
+        match repo::user::get_with_id(&pool, &payload.user_id).await {
+            Ok(user) => {
+                if user.firstname == payload.firstname || user.lastname == payload.lastname {
+                    (
+                        axum::http::StatusCode::NOT_MODIFIED,
+                        axum::Json(response::UserUpdateNameResponse {
+                            message: String::from("No change"),
+                            data: Vec::new(),
+                        }),
+                    )
+                } else {
+                    match repo::user::update_name(
+                        &pool,
+                        &user.id,
+                        &payload.firstname,
+                        &payload.lastname,
+                    )
+                    .await
+                    {
+                        Ok(_) => (
+                            axum::http::StatusCode::OK,
+                            axum::Json(response::UserUpdateNameResponse {
+                                message: String::from(super::messages::SUCCESSFUL_MESSAGE),
+                                data: vec![textsender_models::user::User {
+                                    id: user.id,
+                                    phone_number: user.phone_number,
+                                    firstname: payload.firstname,
+                                    lastname: payload.lastname,
+                                    username: user.username,
+                                    created: user.created,
+                                    last_login: user.last_login,
+                                    ..Default::default()
+                                }],
+                            }),
+                        ),
+                        Err(err) => (
+                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                            axum::Json(response::UserUpdateNameResponse {
+                                message: err.to_string(),
+                                data: Vec::new(),
+                            }),
+                        ),
+                    }
+                }
+            }
+            Err(err) => (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                axum::Json(response::UserUpdateNameResponse {
+                    message: err.to_string(),
+                    data: Vec::new(),
+                }),
+            ),
         }
     }
 }

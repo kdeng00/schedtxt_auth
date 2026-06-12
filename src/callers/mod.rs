@@ -17,4 +17,6 @@ pub mod endpoints {
     pub const REFRESH_TOKEN: &str = "/api/v1/token/refresh";
     /// Endpoint constant for updating password
     pub const UPDATE_PASSWORD: &str = "/api/v1/user/password/update";
+    /// Endpoint constant for updating user's name
+    pub const UPDATE_USER_NAME: &str = "/api/v1/user/name/update";
 }

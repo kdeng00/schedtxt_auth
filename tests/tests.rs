@@ -172,6 +172,7 @@ pub mod requests {
         app.clone().oneshot(req).await
     }
 
+    /// Function to call update password endpoint
     pub async fn update_password(
         app: &axum::Router,
         user_id: &uuid::Uuid,
@@ -198,6 +199,32 @@ pub mod requests {
             Err(err) => Err(err),
         }
     }
+
+    /// Function to call update name of user endpoint
+    pub async fn update_name_of_user(
+        app: &axum::Router,
+        user_id: &uuid::Uuid,
+        firstname: &str,
+        lastname: &str,
+    ) -> Result<axum::response::Response, axum::http::Error> {
+        let payload = serde_json::json!({
+            "user_id": user_id,
+            "firstname": firstname,
+            "lastname": lastname,
+        });
+        match axum::http::Request::builder()
+            .method(axum::http::Method::PATCH)
+            .uri(super::callers::endpoints::UPDATE_USER_NAME)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(axum::body::Body::from(payload.to_string()))
+        {
+            Ok(req) => match app.clone().oneshot(req).await {
+                Ok(resp) => Ok(resp),
+                Err(err) => Err(axum::http::Error::from(err)),
+            },
+            Err(err) => Err(err),
+        }
+    }
 }
 
 /// Test user firstname
@@ -212,6 +239,11 @@ const TEST_PASSWORD: &str = "923ndcry392qryudx328qrdy328r";
 const TEST_PHONE_NUMBER: &str = "+10123456789";
 /// Test updated user password
 const TEST_UPDATED_PASSWORD: &str = "3cnf29ry8q27i3yrc928qi37ryndxc2198q7yd9xzq12837e";
+
+/// Test updated user firstname
+const TEST_UPDATED_FIRSTNAME: &str = "Kuoth";
+/// Test updated user lastname
+const TEST_UPDATED_LASTNAME: &str = "Wech";
 
 /// Test service username
 const TEST_SERVICE_USERNAME: &str = "swoon";
@@ -442,6 +474,41 @@ mod flow {
                             if response.data.len() > 0 {
                                 let id = response.data[0].clone();
                                 Ok(id)
+                            } else {
+                                Err(std::io::Error::other("No data returned"))
+                            }
+                        }
+                        Err(err) => Err(err),
+                    }
+                }
+            }
+            Err(err) => Err(std::io::Error::other(err.to_string())),
+        }
+    }
+
+    pub async fn update_name_of_user(
+        app: &axum::Router,
+        user_id: &uuid::Uuid,
+        firstname: &str,
+        lastname: &str,
+    ) -> Result<textsender_models::user::User, std::io::Error> {
+        match requests::update_name_of_user(app, user_id, firstname, lastname).await {
+            Ok(response) => {
+                if axum::http::StatusCode::OK != response.status() {
+                    Err(std::io::Error::other(format!(
+                        "Status code is off {:?}",
+                        response.status()
+                    )))
+                } else {
+                    match util::convert_response::<callers::login::response::UserUpdateNameResponse>(
+                        response,
+                    )
+                    .await
+                    {
+                        Ok(response) => {
+                            if response.data.len() > 0 {
+                                let user = response.data[0].clone();
+                                Ok(user)
                             } else {
                                 Err(std::io::Error::other("No data returned"))
                             }
@@ -841,6 +908,75 @@ async fn test_update_password() {
                 }
             }
         }
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+
+    match db_mgr::drop_database(&tm_pool, &db_name).await {
+        Ok(()) => {}
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_update_name_of_password() {
+    let tm_pool = db_mgr::get_pool().await.unwrap();
+    let db_name = db_mgr::generate_db_name().await;
+
+    match db_mgr::create_database(&tm_pool, &db_name).await {
+        Ok(_) => {
+            println!("Success");
+        }
+        Err(e) => {
+            assert!(false, "Error: {:?}", e.to_string());
+        }
+    }
+
+    let pool = db_mgr::connect_to_db(&db_name).await.unwrap();
+
+    db::init::migrations(&pool).await;
+
+    let app = init::routes().await.layer(axum::Extension(pool));
+
+    match flow::register_user(&app).await {
+        Ok(user) => match flow::login_user(&app, &user.username, TEST_PASSWORD).await {
+            Ok(login_result) => {
+                assert_eq!(
+                    false,
+                    login_result.access_token.is_empty(),
+                    "Access token is empty when it should not be"
+                );
+
+                match flow::update_name_of_user(
+                    &app,
+                    &user.id,
+                    TEST_UPDATED_FIRSTNAME,
+                    TEST_UPDATED_LASTNAME,
+                )
+                .await
+                {
+                    Ok(user) => {
+                        assert_eq!(
+                            TEST_UPDATED_FIRSTNAME, user.firstname,
+                            "Firstname do not match"
+                        );
+                        assert_eq!(
+                            TEST_UPDATED_LASTNAME, user.lastname,
+                            "Lastname do not match"
+                        );
+                    }
+                    Err(err) => {
+                        assert!(false, "Error: {err:?}");
+                    }
+                }
+            }
+            Err(err) => {
+                assert!(false, "Error: {err:?}");
+            }
+        },
         Err(err) => {
             assert!(false, "Error: {err:?}");
         }
