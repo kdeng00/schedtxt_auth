@@ -37,6 +37,28 @@ pub mod request {
     pub struct RefreshTokenRequest {
         pub access_token: String,
     }
+
+    #[derive(Deserialize, utoipa::ToSchema)]
+    pub struct UpdatePasswordRequest {
+        pub user_id: uuid::Uuid,
+        pub current_password: String,
+        pub updated_password: String,
+        pub confirmed_password: String,
+    }
+
+    impl UpdatePasswordRequest {
+        pub fn is_valid(&self) -> bool {
+            if self.user_id.is_nil()
+                || self.current_password.is_empty()
+                || self.updated_password.is_empty()
+                || self.confirmed_password.is_empty()
+            {
+                false
+            } else {
+                self.updated_password == self.confirmed_password
+            }
+        }
+    }
 }
 
 pub mod response {
@@ -67,6 +89,12 @@ pub mod response {
     pub struct RefreshTokenResponse {
         pub message: String,
         pub data: Vec<textsender_models::token::LoginResult>,
+    }
+
+    #[derive(Deserialize, Serialize, utoipa::ToSchema)]
+    pub struct UpdatePasswordResponse {
+        pub message: String,
+        pub data: Vec<uuid::Uuid>,
     }
 }
 
@@ -506,6 +534,184 @@ pub async fn refresh_token(
                     data: Vec::new(),
                 }),
             )
+        }
+    }
+}
+
+/// Endpoint for a updating password
+#[utoipa::path(
+    patch,
+    path = super::endpoints::UPDATE_PASSWORD,
+    request_body(
+        content = request::UpdatePasswordRequest,
+        description = "Data required to update password",
+        content_type = "application/json"
+    ),
+    responses(
+        (status = 200, description = "User login successful", body = response::UpdatePasswordResponse),
+        (status = 400, description = "Bad data", body = response::UpdatePasswordResponse),
+        (status = 500, description = "Something went wrong", body = response::UpdatePasswordResponse)
+    )
+)]
+pub async fn update_password(
+    axum::Extension(pool): axum::Extension<sqlx::PgPool>,
+    axum::Json(payload): axum::Json<request::UpdatePasswordRequest>,
+) -> (
+    axum::http::StatusCode,
+    axum::Json<response::UpdatePasswordResponse>,
+) {
+    if !payload.is_valid() {
+        (
+            axum::http::StatusCode::BAD_REQUEST,
+            axum::Json(response::UpdatePasswordResponse {
+                message: String::from("Invalid passwords"),
+                data: Vec::new(),
+            }),
+        )
+    } else {
+        let verify_password = |current_password, hashed_password| -> Result<bool, std::io::Error> {
+            match hashing::verify_password(current_password, hashed_password) {
+                Ok(matches) => Ok(matches),
+                Err(err) => Err(std::io::Error::other(err.to_string())),
+            }
+        };
+
+        match repo::user::get_with_id(&pool, &payload.user_id).await {
+            Ok(user) => {
+                let hashed_password = user.password.clone();
+                match verify_password(&payload.current_password, hashed_password) {
+                    Ok(matches) => {
+                        if matches {
+                            let (generate_salt, mut salt) = super::register::generate_the_salt();
+                            salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
+                            let updated_hashed_password = match hashing::hash_password(
+                                &payload.updated_password,
+                                &generate_salt,
+                            ) {
+                                Ok(hashed) => hashed,
+                                Err(err) => {
+                                    eprintln!("Error: {err:?}");
+                                    String::new()
+                                }
+                            };
+
+                            match repo::user::update_password(
+                                &pool,
+                                &user,
+                                &updated_hashed_password,
+                            )
+                            .await
+                            {
+                                Ok(()) => (
+                                    axum::http::StatusCode::OK,
+                                    axum::Json(response::UpdatePasswordResponse {
+                                        message: String::from(super::messages::SUCCESSFUL_MESSAGE),
+                                        data: vec![user.id],
+                                    }),
+                                ),
+                                Err(err) => (
+                                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                    axum::Json(response::UpdatePasswordResponse {
+                                        message: err.to_string(),
+                                        data: Vec::new(),
+                                    }),
+                                ),
+                            }
+                        } else {
+                            (
+                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                axum::Json(response::UpdatePasswordResponse {
+                                    message: String::from("Issue updating password"),
+                                    data: Vec::new(),
+                                }),
+                            )
+                        }
+                    }
+                    Err(err) => (
+                        axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                        axum::Json(response::UpdatePasswordResponse {
+                            message: err.to_string(),
+                            data: Vec::new(),
+                        }),
+                    ),
+                }
+            }
+            Err(err) => {
+                println!("No User found, trying Service User: {err:?}");
+
+                // Try service user
+                match repo::service::get(&pool, &payload.user_id).await {
+                    Ok(service_user) => {
+                        let hashed_password = service_user.passphrase.clone();
+                        match verify_password(&payload.current_password, hashed_password) {
+                            Ok(matches) => {
+                                if matches {
+                                    let (generate_salt, mut salt) =
+                                        super::register::generate_the_salt();
+                                    salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
+                                    let updated_hashed_password = match hashing::hash_password(
+                                        &payload.updated_password,
+                                        &generate_salt,
+                                    ) {
+                                        Ok(hashed) => hashed,
+                                        Err(err) => {
+                                            eprintln!("Error: {err:?}");
+                                            String::new()
+                                        }
+                                    };
+
+                                    match repo::service::update_passphrase(
+                                        &pool,
+                                        &service_user,
+                                        &updated_hashed_password,
+                                    )
+                                    .await
+                                    {
+                                        Ok(()) => (
+                                            axum::http::StatusCode::OK,
+                                            axum::Json(response::UpdatePasswordResponse {
+                                                message: String::from(
+                                                    super::messages::SUCCESSFUL_MESSAGE,
+                                                ),
+                                                data: vec![service_user.id],
+                                            }),
+                                        ),
+                                        Err(err) => (
+                                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                            axum::Json(response::UpdatePasswordResponse {
+                                                message: err.to_string(),
+                                                data: Vec::new(),
+                                            }),
+                                        ),
+                                    }
+                                } else {
+                                    (
+                                        axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                        axum::Json(response::UpdatePasswordResponse {
+                                            message: String::from("Issue updating password"),
+                                            data: Vec::new(),
+                                        }),
+                                    )
+                                }
+                            }
+                            Err(err) => (
+                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                axum::Json(response::UpdatePasswordResponse {
+                                    message: err.to_string(),
+                                    data: Vec::new(),
+                                }),
+                            ),
+                        }
+                    }
+                    Err(err) => (
+                        axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                        axum::Json(response::UpdatePasswordResponse {
+                            message: err.to_string(),
+                            data: Vec::new(),
+                        }),
+                    ),
+                }
+            }
         }
     }
 }

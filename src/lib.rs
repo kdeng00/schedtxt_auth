@@ -8,7 +8,7 @@ pub mod token_stuff;
 pub mod init {
     use axum::{
         Router,
-        routing::{get, post},
+        routing::{get, patch, post},
     };
     use utoipa::OpenApi;
 
@@ -109,6 +109,10 @@ pub mod init {
             .route(
                 callers::endpoints::REFRESH_TOKEN,
                 post(callers::login::refresh_token),
+            )
+            .route(
+                callers::endpoints::UPDATE_PASSWORD,
+                patch(callers::login::update_password),
             )
             .layer(cors::configure_cors().await)
     }

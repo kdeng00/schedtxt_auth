@@ -171,6 +171,33 @@ pub mod requests {
 
         app.clone().oneshot(req).await
     }
+
+    pub async fn update_password(
+        app: &axum::Router,
+        user_id: &uuid::Uuid,
+        current_password: &str,
+        updated_password: &str,
+        confirmed_password: &str,
+    ) -> Result<axum::response::Response, axum::http::Error> {
+        let payload = serde_json::json!({
+            "user_id": user_id,
+            "current_password": current_password,
+            "updated_password": updated_password,
+            "confirmed_password": confirmed_password,
+        });
+        match axum::http::Request::builder()
+            .method(axum::http::Method::PATCH)
+            .uri(super::callers::endpoints::UPDATE_PASSWORD)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(axum::body::Body::from(payload.to_string()))
+        {
+            Ok(req) => match app.clone().oneshot(req).await {
+                Ok(resp) => Ok(resp),
+                Err(err) => Err(axum::http::Error::from(err)),
+            },
+            Err(err) => Err(err),
+        }
+    }
 }
 
 /// Test user firstname
@@ -183,11 +210,15 @@ const TEST_USERNAME: &str = "BillyBob01";
 const TEST_PASSWORD: &str = "923ndcry392qryudx328qrdy328r";
 /// Test user phone number
 const TEST_PHONE_NUMBER: &str = "+10123456789";
+/// Test updated user password
+const TEST_UPDATED_PASSWORD: &str = "3cnf29ry8q27i3yrc928qi37ryndxc2198q7yd9xzq12837e";
 
 /// Test service username
 const TEST_SERVICE_USERNAME: &str = "swoon";
 /// Test service passphrase
 const TEST_SERVICE_PASSPHRASE: &str = "4n5cf349tfy34w857ty39wq45nfdq23";
+/// Test updated service user passphrase
+const TEST_SERVICE_UPDATED_PASSPHRASE: &str = "3487ncfyth934287fcrty32487fry32in7";
 
 mod util {
     pub async fn convert_response<T>(
@@ -367,6 +398,50 @@ mod flow {
                             if response.data.len() > 0 {
                                 let login_result = response.data[0].clone();
                                 Ok(login_result)
+                            } else {
+                                Err(std::io::Error::other("No data returned"))
+                            }
+                        }
+                        Err(err) => Err(err),
+                    }
+                }
+            }
+            Err(err) => Err(std::io::Error::other(err.to_string())),
+        }
+    }
+
+    pub async fn update_password(
+        app: &axum::Router,
+        user_id: &uuid::Uuid,
+        current_password: &str,
+        updated_password: &str,
+        confirmed_password: &str,
+    ) -> Result<uuid::Uuid, std::io::Error> {
+        match requests::update_password(
+            app,
+            user_id,
+            current_password,
+            updated_password,
+            confirmed_password,
+        )
+        .await
+        {
+            Ok(response) => {
+                if axum::http::StatusCode::OK != response.status() {
+                    Err(std::io::Error::other(format!(
+                        "Status code is off {:?}",
+                        response.status()
+                    )))
+                } else {
+                    match util::convert_response::<callers::login::response::UpdatePasswordResponse>(
+                        response,
+                    )
+                    .await
+                    {
+                        Ok(response) => {
+                            if response.data.len() > 0 {
+                                let id = response.data[0].clone();
+                                Ok(id)
                             } else {
                                 Err(std::io::Error::other("No data returned"))
                             }
@@ -648,6 +723,113 @@ async fn test_refresh_token() {
                                 refresh_login_result.access_token.is_empty(),
                                 "Refreshed access token should not be empty"
                             );
+                        }
+                        Err(err) => {
+                            assert!(false, "Error: {err:?}");
+                        }
+                    }
+                }
+                Err(err) => {
+                    assert!(false, "Error: {err:?}");
+                }
+            }
+        }
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+
+    match db_mgr::drop_database(&tm_pool, &db_name).await {
+        Ok(()) => {}
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_update_password() {
+    let tm_pool = db_mgr::get_pool().await.unwrap();
+    let db_name = db_mgr::generate_db_name().await;
+
+    match db_mgr::create_database(&tm_pool, &db_name).await {
+        Ok(_) => {
+            println!("Success");
+        }
+        Err(e) => {
+            assert!(false, "Error: {:?}", e.to_string());
+        }
+    }
+
+    let pool = db_mgr::connect_to_db(&db_name).await.unwrap();
+
+    db::init::migrations(&pool).await;
+
+    let app = init::routes().await.layer(axum::Extension(pool));
+
+    match flow::register_user(&app).await {
+        Ok(user) => match flow::login_user(&app, &user.username, TEST_PASSWORD).await {
+            Ok(login_result) => {
+                assert_eq!(
+                    false,
+                    login_result.access_token.is_empty(),
+                    "Access token is empty when it should not be"
+                );
+
+                match flow::update_password(
+                    &app,
+                    &user.id,
+                    TEST_PASSWORD,
+                    TEST_UPDATED_PASSWORD,
+                    TEST_UPDATED_PASSWORD,
+                )
+                .await
+                {
+                    Ok(id) => {
+                        assert_eq!(id, user.id, "Ids do not match");
+                    }
+                    Err(err) => {
+                        assert!(false, "Error: {err:?}");
+                    }
+                }
+            }
+            Err(err) => {
+                assert!(false, "Error: {err:?}");
+            }
+        },
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+
+    match flow::register_service_user(&app).await {
+        Ok(service_user) => {
+            assert_eq!(
+                false,
+                service_user.id.is_nil(),
+                "The service user id should not be nil"
+            );
+            match flow::login_service_user(&app, TEST_SERVICE_USERNAME, TEST_SERVICE_PASSPHRASE)
+                .await
+            {
+                Ok(login_result) => {
+                    assert_eq!(
+                        false,
+                        login_result.access_token.is_empty(),
+                        "Access token is empty when it should not be"
+                    );
+
+                    match flow::update_password(
+                        &app,
+                        &service_user.id,
+                        TEST_SERVICE_PASSPHRASE,
+                        TEST_SERVICE_UPDATED_PASSPHRASE,
+                        TEST_SERVICE_UPDATED_PASSPHRASE,
+                    )
+                    .await
+                    {
+                        Ok(id) => {
+                            assert_eq!(id, service_user.id, "Ids do not match");
                         }
                         Err(err) => {
                             assert!(false, "Error: {err:?}");

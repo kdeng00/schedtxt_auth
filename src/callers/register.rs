@@ -59,7 +59,7 @@ pub mod response {
     }
 }
 
-fn generate_the_salt() -> (
+pub fn generate_the_salt() -> (
     argon2::password_hash::SaltString,
     textsender_models::user::Salt,
 ) {

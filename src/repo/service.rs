@@ -154,6 +154,32 @@ pub async fn update_last_login(
     }
 }
 
+pub async fn update_passphrase(
+    pool: &sqlx::PgPool,
+    user: &textsender_models::user::ServiceUser,
+    updated_hashed_passphrase: &String,
+) -> Result<(), sqlx::Error> {
+    match sqlx::query(
+        r#"
+        UPDATE "service_user" SET passphrase = $1 WHERE id = $2
+        "#,
+    )
+    .bind(updated_hashed_passphrase)
+    .bind(user.id)
+    .execute(pool)
+    .await
+    {
+        Ok(row) => {
+            if row.rows_affected() > 0 {
+                Ok(())
+            } else {
+                Err(sqlx::Error::RowNotFound)
+            }
+        }
+        Err(err) => Err(err),
+    }
+}
+
 pub async fn insert(
     pool: &sqlx::PgPool,
     service_user: &textsender_models::user::ServiceUser,
