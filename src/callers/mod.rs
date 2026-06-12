@@ -13,4 +13,6 @@ pub mod endpoints {
     pub const REGISTER_SERVICE_USER: &str = "/api/v1/service/register";
     /// Endpoint constant for service login user
     pub const LOGIN_SERVICE_USER: &str = "/api/v1/service/login";
+    /// Endpoint constant for refresh token
+    pub const REFRESH_TOKEN: &str = "/api/v1/token/refresh";
 }

@@ -41,6 +41,36 @@ pub mod user {
         }
     }
 
+    pub async fn get_with_id(
+        pool: &sqlx::PgPool,
+        id: &uuid::Uuid,
+    ) -> Result<textsender_models::user::User, sqlx::Error> {
+        match sqlx::query(
+            r#"
+        SELECT id, username, password, phone_number, salt_id, firstname, lastname, created, last_login FROM "user" WHERE id = $1
+        "#,
+        )
+        .bind(id)
+        .fetch_optional(pool)
+        .await {
+            Ok(r) => match r {
+                Some(r) => Ok(textsender_models::user::User {
+                    id: r.try_get("id")?,
+                    username: r.try_get("username")?,
+                    password: r.try_get("password")?,
+                    phone_number: r.try_get("phone_number")?,
+                    salt_id: r.try_get("salt_id")?,
+                    firstname: r.try_get("firstname")?,
+                    lastname: r.try_get("lastname")?,
+                    created: r.try_get("created")?,
+                    last_login: r.try_get("last_login")?,
+                }),
+                None => Err(sqlx::Error::RowNotFound),
+            },
+            Err(e) => Err(e),
+        }
+    }
+
     pub async fn update_last_login(
         pool: &sqlx::PgPool,
         user: &textsender_models::user::User,

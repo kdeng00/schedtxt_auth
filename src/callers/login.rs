@@ -32,6 +32,11 @@ pub mod request {
             }
         }
     }
+
+    #[derive(Deserialize, utoipa::ToSchema)]
+    pub struct RefreshTokenRequest {
+        pub access_token: String,
+    }
 }
 
 pub mod response {
@@ -56,6 +61,12 @@ pub mod response {
             .unwrap();
         let _parsed_body: LoginResponse = serde_json::from_slice(&body).unwrap();
         todo!("Add code to convert axum::Response to this type");
+    }
+
+    #[derive(Deserialize, Serialize, utoipa::ToSchema)]
+    pub struct RefreshTokenResponse {
+        pub message: String,
+        pub data: Vec<textsender_models::token::LoginResult>,
     }
 }
 
@@ -334,6 +345,167 @@ pub async fn service_user_login(
                     data: Vec::new(),
                 }),
             ),
+        }
+    }
+}
+
+/// Endpoint for service user login
+#[utoipa::path(
+    post,
+    path = super::endpoints::REFRESH_TOKEN,
+    request_body(
+        content = request::RefreshTokenRequest,
+        description = "Data required refresh token",
+        content_type = "application/json"
+    ),
+    responses(
+        (status = 200, description = "Service uuser login successful", body = response::RefreshTokenResponse),
+        (status = 400, description = "Bad data", body = response::RefreshTokenResponse),
+        (status = 500, description = "Something went wrong", body = response::RefreshTokenResponse)
+    )
+)]
+pub async fn refresh_token(
+    axum::Extension(pool): axum::Extension<sqlx::PgPool>,
+    axum::Json(payload): axum::Json<request::RefreshTokenRequest>,
+) -> (
+    axum::http::StatusCode,
+    axum::Json<response::RefreshTokenResponse>,
+) {
+    if payload.access_token.is_empty() {
+        let reason = String::from("Access token not provided");
+
+        (
+            axum::http::StatusCode::BAD_REQUEST,
+            axum::Json(response::RefreshTokenResponse {
+                message: reason,
+                data: Vec::new(),
+            }),
+        )
+    } else {
+        let key = textsender_models::envy::environment::get_secret_key()
+            .await
+            .value;
+        if token_stuff::verify_token(&key, &payload.access_token) {
+            match token_stuff::extract_id_from_token(&key, &payload.access_token) {
+                Ok(id) => {
+                    let generate_service_token = |id, key| -> (Option<String>, Option<i64>) {
+                        match token_stuff::create_service_refresh_token(key, id) {
+                            Ok((token, issued)) => (Some(token), Some(issued)),
+                            Err(_err) => (None, None),
+                        }
+                    };
+
+                    let mut response = response::RefreshTokenResponse {
+                        message: String::new(),
+                        data: Vec::new(),
+                    };
+
+                    match repo::user::get_with_id(&pool, &id).await {
+                        Ok(_user) => {
+                            let (refresh_token, issued) = generate_service_token(&id, &key);
+                            match refresh_token {
+                                Some(token) => match issued {
+                                    Some(issued_at) => {
+                                        response.message =
+                                            String::from(super::messages::SUCCESSFUL_MESSAGE);
+                                        let lr = textsender_models::token::LoginResult {
+                                            user_id: id,
+                                            access_token: token,
+                                            issued_at,
+                                            token_type: String::from(
+                                                textsender_models::token::TOKEN_TYPE,
+                                            ),
+                                            ..Default::default()
+                                        };
+                                        response.data.push(lr);
+                                        (axum::http::StatusCode::OK, axum::Json(response))
+                                    }
+                                    None => (
+                                        axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                        axum::Json(response::RefreshTokenResponse {
+                                            message: String::from("Issued at not returned"),
+                                            data: Vec::new(),
+                                        }),
+                                    ),
+                                },
+                                None => (
+                                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                    axum::Json(response::RefreshTokenResponse {
+                                        message: String::from("Refresh token not generated"),
+                                        data: Vec::new(),
+                                    }),
+                                ),
+                            }
+                        }
+                        Err(err) => {
+                            println!("Unable to find user, checking service user: {err:?}");
+                            match repo::service::get(&pool, &id).await {
+                                Ok(_service_user) => {
+                                    let (refresh_token, issued) = generate_service_token(&id, &key);
+                                    match refresh_token {
+                                        Some(token) => match issued {
+                                            Some(issued_at) => {
+                                                response.message = String::from(
+                                                    super::messages::SUCCESSFUL_MESSAGE,
+                                                );
+                                                let lr = textsender_models::token::LoginResult {
+                                                    user_id: id,
+                                                    access_token: token,
+                                                    issued_at,
+                                                    token_type: String::from(
+                                                        textsender_models::token::TOKEN_TYPE,
+                                                    ),
+                                                    ..Default::default()
+                                                };
+                                                response.data.push(lr);
+                                                (axum::http::StatusCode::OK, axum::Json(response))
+                                            }
+                                            None => (
+                                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                                axum::Json(response::RefreshTokenResponse {
+                                                    message: String::from("Issued at not returned"),
+                                                    data: Vec::new(),
+                                                }),
+                                            ),
+                                        },
+                                        None => (
+                                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                            axum::Json(response::RefreshTokenResponse {
+                                                message: String::from(
+                                                    "Refresh token not generated",
+                                                ),
+                                                data: Vec::new(),
+                                            }),
+                                        ),
+                                    }
+                                }
+                                Err(err) => (
+                                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                    axum::Json(response::RefreshTokenResponse {
+                                        message: err.to_string(),
+                                        data: Vec::new(),
+                                    }),
+                                ),
+                            }
+                        }
+                    }
+                }
+                Err(err) => (
+                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                    axum::Json(response::RefreshTokenResponse {
+                        message: err.to_string(),
+                        data: Vec::new(),
+                    }),
+                ),
+            }
+        } else {
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                axum::Json(response::RefreshTokenResponse {
+                    message: String::from("Unable to verify token"),
+                    data: Vec::new(),
+                }),
+            )
         }
     }
 }
