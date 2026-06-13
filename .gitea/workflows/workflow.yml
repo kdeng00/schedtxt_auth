@@ -41,6 +41,7 @@ jobs:
           POSTGRES_USER: ${{ secrets.DB_TEST_USER || 'testuser' }}
           POSTGRES_PASSWORD: ${{ secrets.DB_TEST_PASSWORD || 'testpassword' }}
           POSTGRES_DB: ${{ secrets.DB_TEST_NAME || 'testdb' }}
+          POSTGRES_PORT: ${{ secrets.DB_PORT || 5432 }}
         # Options to wait until the database is ready
         options: >-
           --health-cmd pg_isready
@@ -71,7 +72,7 @@ jobs:
       - name: Run tests
         env:
           # Define DATABASE_URL for tests to use
-          DATABASE_URL: postgresql://${{ secrets.DB_TEST_USER || 'testuser' }}:${{ secrets.DB_TEST_PASSWORD || 'testpassword' }}@postgres:5432/${{ secrets.DB_TEST_NAME || 'testdb' }}
+          DATABASE_URL: postgresql://${{ secrets.DB_TEST_USER || 'testuser' }}:${{ secrets.DB_TEST_PASSWORD || 'testpassword' }}@postgres:${{ secrets.DB_PORT || 5432 }}/${{ secrets.DB_TEST_NAME || 'testdb' }}
           RUST_LOG: info # Optional: configure test log level
           SECRET_KEY: ${{ secrets.TOKEN_SECRET_KEY }}
           # Make SSH agent available if tests fetch private dependencies
