@@ -24,7 +24,7 @@ pub fn create_token(
         message: String::from(MESSAGE),
         issuer: String::from(ISSUER),
         audiences: vec![String::from(AUDIENCE)],
-        id: *id,
+        user_id: *id,
     };
     textsender_models::token::create_token(provided_key, &resource, time::Duration::hours(4))
 }
@@ -37,7 +37,7 @@ pub fn create_service_token(
         message: String::from(SERVICE_SUBJECT),
         issuer: String::from(ISSUER),
         audiences: vec![String::from(AUDIENCE)],
-        id: *id,
+        user_id: *id,
     };
     textsender_models::token::create_token(provided, &resource, time::Duration::hours(1))
 }
@@ -50,7 +50,7 @@ pub fn create_service_refresh_token(
         message: String::from(SERVICE_SUBJECT),
         issuer: String::from(ISSUER),
         audiences: vec![String::from(AUDIENCE)],
-        id: *id,
+        user_id: *id,
     };
     textsender_models::token::create_token(key, &resource, time::Duration::hours(4))
 }
@@ -67,7 +67,7 @@ pub fn verify_token(key: &String, token: &String) -> bool {
 
 pub fn extract_id_from_token(key: &String, token: &String) -> Result<uuid::Uuid, std::io::Error> {
     match get_payload(key, token) {
-        Ok((payload, _header)) => match payload.claim("id") {
+        Ok((payload, _header)) => match payload.claim("user_id") {
             Some(id) => match uuid::Uuid::parse_str(id.as_str().unwrap()) {
                 Ok(extracted) => Ok(extracted),
                 Err(err) => Err(std::io::Error::other(err.to_string())),

@@ -2212,7 +2212,7 @@ dependencies = [
 
 [[package]]
 name = "textsender_auth"
-version = "0.1.22"
+version = "0.1.23"
 dependencies = [
  "argon2",
  "async-std",
@@ -2239,8 +2239,8 @@ dependencies = [
 
 [[package]]
 name = "textsender_models"
-version = "0.3.1"
-source = "git+ssh://git@git.kundeng.us/phoenix/textsender_models.git?tag=v0.3.1#ba998096cb5d35dae8e627136a795c4d9af5c8f5"
+version = "0.3.3"
+source = "git+ssh://git@git.kundeng.us/phoenix/textsender_models.git?tag=v0.3.3#c09fa36b15601b37f65b8baac0d479c30d2c1e44"
 dependencies = [
  "const_format",
  "dotenvy",
