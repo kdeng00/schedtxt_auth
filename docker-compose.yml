@@ -23,9 +23,9 @@ services:
     container_name: textsender_auth_db # Optional: Give the container a specific name
     environment:
       # These MUST match the user, password, and database name in the DATABASE_URL above
-      POSTGRES_USER: ${DB_USER:-textsender_op}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-password}
-      POSTGRES_DB: ${DB_NAME:-textsender_auth_db}
+      POSTGRES_USER: ${DB_AUTH_USER:-textsender_op}
+      POSTGRES_PASSWORD: ${DB_AUTH_PASSWORD:-password}
+      POSTGRES_DB: ${DB_AUTH_NAME:-textsender_auth_db}
     volumes:
       # Persist database data using a named volume
       - postgres_data:/var/lib/postgresql
