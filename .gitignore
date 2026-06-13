@@ -1,5 +1,3 @@
-/textsender-auth
-
 .env
 .env.local
 .env.docker
