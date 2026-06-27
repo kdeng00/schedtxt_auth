@@ -19,7 +19,7 @@ pub fn get_expiration(issued: &time::OffsetDateTime) -> Result<time::OffsetDateT
 pub fn create_token(
     provided_key: &String,
     id: &uuid::Uuid,
-) -> Result<(String, i64), josekit::JoseError> {
+) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
     let resource = textsender_models::token::TokenResource {
         message: String::from(MESSAGE),
         issuer: String::from(ISSUER),
@@ -32,7 +32,7 @@ pub fn create_token(
 pub fn create_service_token(
     provided: &String,
     id: &uuid::Uuid,
-) -> Result<(String, i64), josekit::JoseError> {
+) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
     let resource = textsender_models::token::TokenResource {
         message: String::from(SERVICE_SUBJECT),
         issuer: String::from(ISSUER),
@@ -45,7 +45,7 @@ pub fn create_service_token(
 pub fn create_service_refresh_token(
     key: &String,
     id: &uuid::Uuid,
-) -> Result<(String, i64), josekit::JoseError> {
+) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
     let resource = textsender_models::token::TokenResource {
         message: String::from(SERVICE_SUBJECT),
         issuer: String::from(ISSUER),
@@ -125,8 +125,8 @@ mod tests {
             .value;
         let id = uuid::Uuid::new_v4();
         match create_token(&special_key, &id) {
-            Ok((token, _duration)) => {
-                let result = verify_token(&special_key, &token);
+            Ok(cst) => {
+                let result = verify_token(&special_key, &cst.access_token);
                 assert!(result, "Token not verified");
             }
             Err(err) => {

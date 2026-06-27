@@ -189,10 +189,9 @@ pub async fn user_login(
                                 let key = textsender_models::envy::environment::get_secret_key()
                                     .await
                                     .value;
-                                let (token_literal, duration) =
-                                    token_stuff::create_token(&key, &user.id).unwrap();
+                                let cst = token_stuff::create_token(&key, &user.id).unwrap();
 
-                                if token_stuff::verify_token(&key, &token_literal) {
+                                if token_stuff::verify_token(&key, &cst.access_token) {
                                     let current_time = time::OffsetDateTime::now_utc();
                                     let _ =
                                         repo::user::update_last_login(&pool, &user, &current_time)
@@ -204,12 +203,12 @@ pub async fn user_login(
                                             message: String::from("Successful"),
                                             data: vec![textsender_models::token::LoginResult {
                                                 user_id: user.id,
-                                                access_token: token_literal,
+                                                access_token: cst.access_token,
                                                 token_type: String::from(
                                                     textsender_models::token::TOKEN_TYPE,
                                                 ),
-                                                issued_at: duration,
-                                                ..Default::default()
+                                                issued_at: cst.issued,
+                                                expires_in: cst.expires_in,
                                             }],
                                         }),
                                     )
@@ -330,10 +329,10 @@ pub async fn service_user_login(
                                 let key = textsender_models::envy::environment::get_secret_key()
                                     .await
                                     .value;
-                                let (token_literal, duration) =
+                                let cst =
                                     token_stuff::create_token(&key, &service_user.id).unwrap();
 
-                                if token_stuff::verify_token(&key, &token_literal) {
+                                if token_stuff::verify_token(&key, &cst.access_token) {
                                     let current_time = time::OffsetDateTime::now_utc();
                                     let _ = repo::service::update_last_login(
                                         &pool,
@@ -350,12 +349,12 @@ pub async fn service_user_login(
                                             ),
                                             data: vec![textsender_models::token::LoginResult {
                                                 user_id: service_user.id,
-                                                access_token: token_literal,
+                                                access_token: cst.access_token,
                                                 token_type: String::from(
                                                     textsender_models::token::TOKEN_TYPE,
                                                 ),
-                                                issued_at: duration,
-                                                ..Default::default()
+                                                issued_at: cst.issued,
+                                                expires_in: cst.expires_in,
                                             }],
                                         }),
                                     )
@@ -440,12 +439,10 @@ pub async fn refresh_token(
         if token_stuff::verify_token(&key, &payload.access_token) {
             match token_stuff::extract_id_from_token(&key, &payload.access_token) {
                 Ok(id) => {
-                    let generate_service_token = |id, key| -> (Option<String>, Option<i64>) {
-                        match token_stuff::create_service_refresh_token(key, id) {
-                            Ok((token, issued)) => (Some(token), Some(issued)),
-                            Err(_err) => (None, None),
-                        }
-                    };
+                    let generate_service_token =
+                        |id, key| -> Option<textsender_models::token::CreateTokenResult> {
+                            token_stuff::create_service_refresh_token(key, id).ok()
+                        };
 
                     let mut response = response::RefreshTokenResponse {
                         message: String::new(),
@@ -453,21 +450,43 @@ pub async fn refresh_token(
                     };
 
                     match repo::user::get_with_id(&pool, &id).await {
-                        Ok(_user) => {
-                            let (refresh_token, issued) = generate_service_token(&id, &key);
-                            match refresh_token {
-                                Some(token) => match issued {
-                                    Some(issued_at) => {
+                        Ok(_user) => match generate_service_token(&id, &key) {
+                            Some(cst) => {
+                                response.message =
+                                    String::from(super::messages::SUCCESSFUL_MESSAGE);
+                                let lr = textsender_models::token::LoginResult {
+                                    user_id: id,
+                                    access_token: cst.access_token,
+                                    issued_at: cst.issued,
+                                    expires_in: cst.expires_in,
+                                    token_type: String::from(textsender_models::token::TOKEN_TYPE),
+                                };
+                                response.data.push(lr);
+                                (axum::http::StatusCode::OK, axum::Json(response))
+                            }
+                            None => (
+                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                axum::Json(response::RefreshTokenResponse {
+                                    message: String::from("Refresh token not generated"),
+                                    data: Vec::new(),
+                                }),
+                            ),
+                        },
+                        Err(err) => {
+                            println!("Unable to find user, checking service user: {err:?}");
+                            match repo::service::get(&pool, &id).await {
+                                Ok(_service_user) => match generate_service_token(&id, &key) {
+                                    Some(cst) => {
                                         response.message =
                                             String::from(super::messages::SUCCESSFUL_MESSAGE);
                                         let lr = textsender_models::token::LoginResult {
                                             user_id: id,
-                                            access_token: token,
-                                            issued_at,
+                                            access_token: cst.access_token,
+                                            issued_at: cst.issued,
+                                            expires_in: cst.expires_in,
                                             token_type: String::from(
                                                 textsender_models::token::TOKEN_TYPE,
                                             ),
-                                            ..Default::default()
                                         };
                                         response.data.push(lr);
                                         (axum::http::StatusCode::OK, axum::Json(response))
@@ -480,57 +499,6 @@ pub async fn refresh_token(
                                         }),
                                     ),
                                 },
-                                None => (
-                                    axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                                    axum::Json(response::RefreshTokenResponse {
-                                        message: String::from("Refresh token not generated"),
-                                        data: Vec::new(),
-                                    }),
-                                ),
-                            }
-                        }
-                        Err(err) => {
-                            println!("Unable to find user, checking service user: {err:?}");
-                            match repo::service::get(&pool, &id).await {
-                                Ok(_service_user) => {
-                                    let (refresh_token, issued) = generate_service_token(&id, &key);
-                                    match refresh_token {
-                                        Some(token) => match issued {
-                                            Some(issued_at) => {
-                                                response.message = String::from(
-                                                    super::messages::SUCCESSFUL_MESSAGE,
-                                                );
-                                                let lr = textsender_models::token::LoginResult {
-                                                    user_id: id,
-                                                    access_token: token,
-                                                    issued_at,
-                                                    token_type: String::from(
-                                                        textsender_models::token::TOKEN_TYPE,
-                                                    ),
-                                                    ..Default::default()
-                                                };
-                                                response.data.push(lr);
-                                                (axum::http::StatusCode::OK, axum::Json(response))
-                                            }
-                                            None => (
-                                                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                                                axum::Json(response::RefreshTokenResponse {
-                                                    message: String::from("Issued at not returned"),
-                                                    data: Vec::new(),
-                                                }),
-                                            ),
-                                        },
-                                        None => (
-                                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
-                                            axum::Json(response::RefreshTokenResponse {
-                                                message: String::from(
-                                                    "Refresh token not generated",
-                                                ),
-                                                data: Vec::new(),
-                                            }),
-                                        ),
-                                    }
-                                }
                                 Err(err) => (
                                     axum::http::StatusCode::INTERNAL_SERVER_ERROR,
                                     axum::Json(response::RefreshTokenResponse {
