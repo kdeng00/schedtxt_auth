@@ -24,9 +24,12 @@ pub mod init {
         paths(
             common_callers::endpoint::db_ping, common_callers::endpoint::root,
             register_caller::register_user, login_caller::user_login,
+            login_caller::get_user_profile,
             ),
         components(schemas(common_callers::response::TestResult,
-                register_responses::Response, login_responses::LoginResponse)),
+                register_responses::Response, login_responses::LoginResponse,
+            login_responses::GetUserProfileResponse,
+        )),
         tags(
             (name = "TextSender Auth API", description = "Auth API for TextSender API")
             )
@@ -39,6 +42,7 @@ pub mod init {
             let cors = tower_http::cors::CorsLayer::new()
                 .allow_methods([
                     axum::http::Method::GET,
+                    axum::http::Method::PATCH,
                     axum::http::Method::POST,
                     axum::http::Method::PUT,
                     axum::http::Method::DELETE,
@@ -76,6 +80,12 @@ pub mod init {
                     cors.allow_origin(vec![
                         "http://localhost:4200".parse().unwrap(),
                         "http://127.0.0.1:4200".parse().unwrap(),
+                        "http://localhost:5173".parse().unwrap(),
+                        "http://127.0.0.1:5173".parse().unwrap(),
+                        "http://localhost:9080".parse().unwrap(),
+                        "http://127.0.0.1:9080".parse().unwrap(),
+                        "http://localhost:9081".parse().unwrap(),
+                        "http://127.0.0.1:9081".parse().unwrap(),
                     ])
                 }
             }
@@ -117,6 +127,10 @@ pub mod init {
             .route(
                 callers::endpoints::UPDATE_USER_NAME,
                 patch(callers::login::update_name_of_user),
+            )
+            .route(
+                callers::endpoints::GET_USER_PROFILE,
+                get(callers::login::get_user_profile),
             )
             .layer(cors::configure_cors().await)
     }

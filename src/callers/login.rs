@@ -120,6 +120,12 @@ pub mod response {
         pub message: String,
         pub data: Vec<textsender_models::user::User>,
     }
+
+    #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
+    pub struct GetUserProfileResponse {
+        pub message: String,
+        pub data: Vec<textsender_models::user::UserProfile>,
+    }
 }
 
 /// Endpoint for a user login
@@ -793,6 +799,57 @@ pub async fn update_name_of_user(
                     data: Vec::new(),
                 }),
             ),
+        }
+    }
+}
+
+/// Endpoint to get User Profile
+#[utoipa::path(
+    delete,
+    path = super::endpoints::GET_USER_PROFILE,
+    params(("id" = uuid::Uuid, Path, description = "User Id")),
+    responses(
+        (status = 200, description = "Deleted", body = response::GetUserProfileResponse),
+        (status = 400, description = "Bad request", body = response::GetUserProfileResponse),
+        (status = 500, description = "Error", body = response::GetUserProfileResponse)
+    )
+)]
+pub async fn get_user_profile(
+    axum::Extension(pool): axum::Extension<sqlx::PgPool>,
+    axum::extract::Path(id): axum::extract::Path<uuid::Uuid>,
+) -> (
+    axum::http::StatusCode,
+    axum::Json<response::GetUserProfileResponse>,
+) {
+    let mut response = response::GetUserProfileResponse::default();
+    if id.is_nil() {
+        response.message = String::from("Invalid");
+        return (axum::http::StatusCode::BAD_REQUEST, axum::Json(response));
+    }
+
+    match repo::user::get_with_id(&pool, &id).await {
+        Ok(user) => {
+            let user_profile = textsender_models::user::UserProfile {
+                user_id: user.id,
+                phone_number: user.phone_number,
+                firstname: user.firstname,
+                lastname: user.lastname,
+                last_login: user.last_login,
+                created: user.created,
+                username: user.username,
+            };
+            response.message = String::from(super::messages::SUCCESSFUL_MESSAGE);
+            response.data.push(user_profile);
+
+            (axum::http::StatusCode::OK, axum::Json(response))
+        }
+        Err(err) => {
+            eprintln!("Error: {err:?}");
+            response.message = String::from("Bad request");
+            (
+                axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                axum::Json(response),
+            )
         }
     }
 }

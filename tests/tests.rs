@@ -225,6 +225,29 @@ pub mod requests {
             Err(err) => Err(err),
         }
     }
+
+    /// Function to call get user profile endpoint
+    pub async fn get_user_profile(
+        app: &axum::Router,
+        user_id: &uuid::Uuid,
+    ) -> Result<axum::response::Response, axum::http::Error> {
+        let url = super::util::format_url_with_value(
+            textsender_auth::callers::endpoints::GET_USER_PROFILE,
+            user_id,
+        );
+        match axum::http::Request::builder()
+            .method(axum::http::Method::GET)
+            .uri(url)
+            .header(axum::http::header::CONTENT_TYPE, "application/json")
+            .body(axum::body::Body::empty())
+        {
+            Ok(req) => match app.clone().oneshot(req).await {
+                Ok(resp) => Ok(resp),
+                Err(err) => Err(axum::http::Error::from(err)),
+            },
+            Err(err) => Err(err),
+        }
+    }
 }
 
 /// Test user firstname
@@ -271,6 +294,11 @@ mod util {
             }
             Err(err) => Err(std::io::Error::other(err.to_string())),
         }
+    }
+
+    pub fn format_url_with_value(endpoint: &str, value: &uuid::Uuid) -> String {
+        let last = endpoint.len() - 5;
+        format!("{}/{value}", &endpoint[0..last])
     }
 }
 
@@ -977,6 +1005,82 @@ async fn test_update_name_of_password() {
                 assert!(false, "Error: {err:?}");
             }
         },
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+
+    match db_mgr::drop_database(&tm_pool, &db_name).await {
+        Ok(()) => {}
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_get_user_profile() {
+    let tm_pool = db_mgr::get_pool().await.unwrap();
+    let db_name = db_mgr::generate_db_name().await;
+
+    match db_mgr::create_database(&tm_pool, &db_name).await {
+        Ok(_) => {
+            println!("Success");
+        }
+        Err(e) => {
+            assert!(false, "Error: {:?}", e.to_string());
+        }
+    }
+
+    let pool = db_mgr::connect_to_db(&db_name).await.unwrap();
+
+    db::init::migrations(&pool).await;
+
+    let app = init::routes().await.layer(axum::Extension(pool));
+
+    let user_id = match flow::register_user(&app).await {
+        Ok(user) => match flow::login_user(&app, &user.username, TEST_PASSWORD).await {
+            Ok(login_result) => {
+                assert_eq!(
+                    false,
+                    login_result.access_token.is_empty(),
+                    "Access token is empty when it should not be"
+                );
+                login_result.user_id
+            }
+            Err(err) => {
+                assert!(false, "Error: {err:?}");
+                uuid::Uuid::nil()
+            }
+        },
+        Err(err) => {
+            assert!(false, "Error: {err:?}");
+            uuid::Uuid::nil()
+        }
+    };
+
+    assert_eq!(false, user_id.is_nil(), "User Id should not be empty");
+
+    match requests::get_user_profile(&app, &user_id).await {
+        Ok(response) => {
+            match util::convert_response::<
+                textsender_auth::callers::login::response::GetUserProfileResponse,
+            >(response)
+            .await
+            {
+                Ok(response) => {
+                    assert_eq!(false, response.data.is_empty(), "No User Profile found");
+                    let user_profile = &response.data[0];
+                    assert_eq!(
+                        TEST_USERNAME, user_profile.username,
+                        "Username does not match"
+                    );
+                }
+                Err(err) => {
+                    assert!(false, "Error: {err:?}");
+                }
+            }
+        }
         Err(err) => {
             assert!(false, "Error: {err:?}");
         }

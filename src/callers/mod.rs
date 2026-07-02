@@ -19,4 +19,6 @@ pub mod endpoints {
     pub const UPDATE_PASSWORD: &str = "/api/v1/user/password/update";
     /// Endpoint constant for updating user's name
     pub const UPDATE_USER_NAME: &str = "/api/v1/user/name/update";
+    /// Endpoint constant for getting user profile
+    pub const GET_USER_PROFILE: &str = "/api/v1/user/profile/{id}";
 }
