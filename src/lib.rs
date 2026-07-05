@@ -58,7 +58,7 @@ pub mod init {
             match std::env::var(textsender_models::envy::keys::APP_ENV).as_deref() {
                 Ok("production") => {
                     let allowed_origins_env =
-                        textsender_models::envy::environment::get_allowed_origins().await;
+                        textsender_models::envy::environment::get_allowed_origins();
                     match textsender_models::envy::utility::delimitize(&allowed_origins_env) {
                         Ok(alwd) => {
                             let allowed_origins: Vec<axum::http::HeaderValue> = alwd

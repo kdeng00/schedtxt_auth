@@ -1,6 +1,6 @@
 [package]
 name = "textsender_auth"
-version = "0.2.1"
+version = "0.2.2"
 edition = "2024"
 rust-version = "1.96"
 
@@ -10,15 +10,15 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.150" }
 tokio = { version = "1.52.3", features = ["rt-multi-thread"] }
 tracing-subscriber = { version = "0.3.23" }
-tower-http = { version = "0.6.11", features = ["cors"] }
+tower-http = { version = "0.7.0", features = ["cors"] }
 sqlx = { version = "0.9.0", features = ["runtime-tokio", "tls-native-tls", "postgres", "time", "uuid"] }
 uuid = { version = "1.23.3", features = ["v4", "serde"] }
 argon2 = { version = "0.5.3", features = ["std"] } # Use the latest 0.5.x version
-time = { version = "0.3.49", features = ["macros", "serde"] }
+time = { version = "0.3.53", features = ["macros", "serde"] }
 josekit = { version = "0.10.3" }
 utoipa = { version = "5.5.0", features = ["axum_extras"] }
 utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
-textsender_models = { git = "ssh://git@git.kundeng.us/phoenix/textsender_models.git", tag = "v0.4.10", features = ["config", "user"] }
+textsender_models = { git = "ssh://git@git.kundeng.us/phoenix/textsender_models.git", tag = "v0.5.0", features = ["config", "user"] }
 
 [dev-dependencies]
 tower = { version = "0.5.3", features = ["full"] }

@@ -192,9 +192,8 @@ pub async fn user_login(
                         Ok(matches) => {
                             if matches {
                                 // Create token
-                                let key = textsender_models::envy::environment::get_secret_key()
-                                    .await
-                                    .value;
+                                let key =
+                                    textsender_models::envy::environment::get_secret_key().value;
                                 let cst = token_stuff::create_token(&key, &user.id).unwrap();
 
                                 if token_stuff::verify_token(&key, &cst.access_token) {
@@ -332,9 +331,8 @@ pub async fn service_user_login(
                             if matches {
                                 // Create token
                                 println!("Creating token");
-                                let key = textsender_models::envy::environment::get_secret_key()
-                                    .await
-                                    .value;
+                                let key =
+                                    textsender_models::envy::environment::get_secret_key().value;
                                 let cst =
                                     token_stuff::create_token(&key, &service_user.id).unwrap();
 
@@ -439,9 +437,7 @@ pub async fn refresh_token(
             }),
         )
     } else {
-        let key = textsender_models::envy::environment::get_secret_key()
-            .await
-            .value;
+        let key = textsender_models::envy::environment::get_secret_key().value;
         if token_stuff::verify_token(&key, &payload.access_token) {
             match token_stuff::extract_id_from_token(&key, &payload.access_token) {
                 Ok(id) => {

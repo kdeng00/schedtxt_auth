@@ -17,7 +17,7 @@ pub fn get_expiration(issued: &time::OffsetDateTime) -> Result<time::OffsetDateT
 }
 
 pub fn create_token(
-    provided_key: &String,
+    provided_key: &str,
     id: &uuid::Uuid,
 ) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
     let resource = textsender_models::token::TokenResource {
@@ -26,11 +26,11 @@ pub fn create_token(
         audiences: vec![String::from(AUDIENCE)],
         user_id: *id,
     };
-    textsender_models::token::create_token(provided_key, &resource, time::Duration::hours(4))
+    textsender_models::token::create_token(provided_key, resource, time::Duration::hours(4))
 }
 
 pub fn create_service_token(
-    provided: &String,
+    provided: &str,
     id: &uuid::Uuid,
 ) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
     let resource = textsender_models::token::TokenResource {
@@ -39,11 +39,11 @@ pub fn create_service_token(
         audiences: vec![String::from(AUDIENCE)],
         user_id: *id,
     };
-    textsender_models::token::create_token(provided, &resource, time::Duration::hours(1))
+    textsender_models::token::create_token(provided, resource, time::Duration::hours(1))
 }
 
 pub fn create_service_refresh_token(
-    key: &String,
+    key: &str,
     id: &uuid::Uuid,
 ) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
     let resource = textsender_models::token::TokenResource {
@@ -52,10 +52,10 @@ pub fn create_service_refresh_token(
         audiences: vec![String::from(AUDIENCE)],
         user_id: *id,
     };
-    textsender_models::token::create_token(key, &resource, time::Duration::hours(4))
+    textsender_models::token::create_token(key, resource, time::Duration::hours(4))
 }
 
-pub fn verify_token(key: &String, token: &String) -> bool {
+pub fn verify_token(key: &str, token: &str) -> bool {
     match get_payload(key, token) {
         Ok((payload, _header)) => match payload.subject() {
             Some(_sub) => true,
@@ -65,7 +65,7 @@ pub fn verify_token(key: &String, token: &String) -> bool {
     }
 }
 
-pub fn extract_id_from_token(key: &String, token: &String) -> Result<uuid::Uuid, std::io::Error> {
+pub fn extract_id_from_token(key: &str, token: &str) -> Result<uuid::Uuid, std::io::Error> {
     match get_payload(key, token) {
         Ok((payload, _header)) => match payload.claim("user_id") {
             Some(id) => match uuid::Uuid::parse_str(id.as_str().unwrap()) {
@@ -83,7 +83,7 @@ pub const APP_SUBJECT: &str = "Something random";
 pub const SERVICE_TOKEN_TYPE: &str = "Textsender_Service";
 pub const SERVICE_SUBJECT: &str = "Service random";
 
-pub fn get_token_type(key: &String, token: &String) -> Result<String, std::io::Error> {
+pub fn get_token_type(key: &str, token: &str) -> Result<String, std::io::Error> {
     match get_payload(key, token) {
         Ok((payload, _header)) => match payload.subject() {
             Some(subject) => {
@@ -101,13 +101,13 @@ pub fn get_token_type(key: &String, token: &String) -> Result<String, std::io::E
     }
 }
 
-pub fn is_token_type_valid(token_type: &String) -> bool {
+pub fn is_token_type_valid(token_type: &str) -> bool {
     token_type == SERVICE_TOKEN_TYPE
 }
 
 fn get_payload(
-    key: &String,
-    token: &String,
+    key: &str,
+    token: &str,
 ) -> Result<(josekit::jwt::JwtPayload, josekit::jws::JwsHeader), josekit::JoseError> {
     let ver = Hs256.verifier_from_bytes(key.as_bytes()).unwrap();
     jwt::decode_with_verifier(token, &ver)
@@ -119,14 +119,11 @@ mod tests {
 
     #[test]
     fn test_tokenize() {
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        let special_key = rt
-            .block_on(textsender_models::envy::environment::get_secret_key())
-            .value;
+        let special_key = textsender_models::envy::environment::get_secret_key();
         let id = uuid::Uuid::new_v4();
-        match create_token(&special_key, &id) {
+        match create_token(&special_key.value, &id) {
             Ok(cst) => {
-                let result = verify_token(&special_key, &cst.access_token);
+                let result = verify_token(&special_key.value, &cst.access_token);
                 assert!(result, "Token not verified");
             }
             Err(err) => {
