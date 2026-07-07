@@ -80,7 +80,7 @@ pub fn generate_the_salt() -> (
     responses(
         (status = 201, description = "User created", body = response::Response),
         (status = 404, description = "User already exists", body = response::Response),
-        (status = 400, description = "Issue creating user", body = response::Response)
+        (status = 500, description = "Issue creating user", body = response::Response)
     )
 )]
 pub async fn register_user(
@@ -105,9 +105,7 @@ pub async fn register_user(
         let mut user = textsender_models::user::User {
             username: payload.username.clone(),
             password: payload.password.clone(),
-            // email: payload.email.clone(),
             phone_number: payload.phone_number.clone(),
-            // email_verified: true,
             ..Default::default()
         };
 

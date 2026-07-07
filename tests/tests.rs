@@ -9,9 +9,7 @@ mod db_mgr {
     pub const LIMIT: usize = 6;
 
     pub async fn get_pool() -> Result<sqlx::PgPool, sqlx::Error> {
-        let tm_db_url = textsender_models::envy::environment::get_db_url()
-            .await
-            .value;
+        let tm_db_url = textsender_models::envy::environment::get_db_url().value;
         let tm_options = sqlx::postgres::PgConnectOptions::from_str(&tm_db_url).unwrap();
         sqlx::PgPool::connect_with(tm_options).await
     }
@@ -23,9 +21,7 @@ mod db_mgr {
     }
 
     pub async fn connect_to_db(db_name: &str) -> Result<sqlx::PgPool, sqlx::Error> {
-        let db_url = textsender_models::envy::environment::get_db_url()
-            .await
-            .value;
+        let db_url = textsender_models::envy::environment::get_db_url().value;
         let options = sqlx::postgres::PgConnectOptions::from_str(&db_url)?.database(db_name);
         sqlx::PgPool::connect_with(options).await
     }
@@ -35,7 +31,10 @@ mod db_mgr {
         db_name: &str,
     ) -> Result<(), sqlx::Error> {
         let create_query = format!("CREATE DATABASE {}", db_name);
-        match sqlx::query(&create_query).execute(template_pool).await {
+        match sqlx::query(sqlx::AssertSqlSafe(create_query))
+            .execute(template_pool)
+            .await
+        {
             Ok(_) => Ok(()),
             Err(e) => Err(e),
         }
@@ -47,14 +46,14 @@ mod db_mgr {
         db_name: &str,
     ) -> Result<(), sqlx::Error> {
         let drop_query = format!("DROP DATABASE IF EXISTS {} WITH (FORCE)", db_name);
-        sqlx::query(&drop_query).execute(template_pool).await?;
+        sqlx::query(sqlx::AssertSqlSafe(drop_query))
+            .execute(template_pool)
+            .await?;
         Ok(())
     }
 
     pub async fn get_database_name() -> Result<String, Box<dyn std::error::Error>> {
-        let database_url = textsender_models::envy::environment::get_db_url()
-            .await
-            .value;
+        let database_url = textsender_models::envy::environment::get_db_url().value;
 
         let parsed_url = url::Url::parse(&database_url)?;
         if parsed_url.scheme() == "postgres" || parsed_url.scheme() == "postgresql" {

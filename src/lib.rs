@@ -38,7 +38,6 @@ pub mod init {
 
     mod cors {
         pub async fn configure_cors() -> tower_http::cors::CorsLayer {
-            // Start building the CORS layer with common settings
             let cors = tower_http::cors::CorsLayer::new()
                 .allow_methods([
                     axum::http::Method::GET,
@@ -46,11 +45,11 @@ pub mod init {
                     axum::http::Method::POST,
                     axum::http::Method::PUT,
                     axum::http::Method::DELETE,
-                ]) // Specify allowed methods:cite[2]
+                ])
                 .allow_headers([
                     axum::http::header::CONTENT_TYPE,
                     axum::http::header::AUTHORIZATION,
-                ]) // Specify allowed headers:cite[2]
+                ])
                 .allow_credentials(true) // If you need to send cookies or authentication headers:cite[2]
                 .max_age(std::time::Duration::from_secs(3600)); // Cache the preflight response for 1 hour:cite[2]
 
@@ -93,7 +92,6 @@ pub mod init {
     }
 
     pub async fn routes() -> Router {
-        // build our application with a route
         Router::new()
             .route(
                 callers::endpoints::DBTEST,

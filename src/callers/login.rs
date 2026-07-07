@@ -96,11 +96,19 @@ pub mod response {
     pub async fn extract(
         response: axum::response::Response,
     ) -> Result<LoginResponse, std::io::Error> {
-        let body = axum::body::to_bytes(response.into_body(), usize::MAX)
-            .await
-            .unwrap();
-        let _parsed_body: LoginResponse = serde_json::from_slice(&body).unwrap();
-        todo!("Add code to convert axum::Response to this type");
+        let body = match axum::body::to_bytes(response.into_body(), usize::MAX).await {
+            Ok(body) => body,
+            Err(err) => {
+                return Err(std::io::Error::other(err));
+            }
+        };
+        let parsed_body: LoginResponse = match serde_json::from_slice(&body) {
+            Ok(body) => body,
+            Err(err) => {
+                return Err(std::io::Error::other(err));
+            }
+        };
+        Ok(parsed_body)
     }
 
     #[derive(Deserialize, Serialize, utoipa::ToSchema)]
@@ -194,7 +202,18 @@ pub async fn user_login(
                                 // Create token
                                 let key =
                                     textsender_models::envy::environment::get_secret_key().value;
-                                let cst = token_stuff::create_token(&key, &user.id).unwrap();
+                                let cst = match token_stuff::create_token(&key, &user.id) {
+                                    Ok(token) => token,
+                                    Err(_err) => {
+                                        return (
+                                            axum::http::StatusCode::INTERNAL_SERVER_ERROR,
+                                            axum::Json(response::LoginResponse {
+                                                message: String::from("Error creating token"),
+                                                data: Vec::new(),
+                                            }),
+                                        );
+                                    }
+                                };
 
                                 if token_stuff::verify_token(&key, &cst.access_token) {
                                     let current_time = time::OffsetDateTime::now_utc();
