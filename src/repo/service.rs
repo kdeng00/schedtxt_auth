@@ -52,7 +52,7 @@ pub async fn get_passphrase(
 pub async fn get(
     pool: &sqlx::PgPool,
     id: &uuid::Uuid,
-) -> Result<textsender_models::user::ServiceUser, sqlx::Error> {
+) -> Result<schedtxt_models::user::ServiceUser, sqlx::Error> {
     match sqlx::query(
         r#"SELECT id, username, passphrase, created, last_login, salt_id FROM "service_user" WHERE id = $1"#
         ).bind(id)
@@ -68,7 +68,7 @@ pub async fn get(
                 }
             };
 
-            let service_user = textsender_models::user::ServiceUser {
+            let service_user = schedtxt_models::user::ServiceUser {
                 id: row.try_get("id")?,
                 username: row.try_get("username")?,
                 passphrase: row.try_get("passphrase")?,
@@ -88,7 +88,7 @@ pub async fn get(
 pub async fn get_with_username(
     pool: &sqlx::PgPool,
     username: &String,
-) -> Result<textsender_models::user::ServiceUser, sqlx::Error> {
+) -> Result<schedtxt_models::user::ServiceUser, sqlx::Error> {
     match sqlx::query(
         r#"SELECT id, username, passphrase, created, last_login, salt_id FROM "service_user" WHERE username = $1"#
         ).bind(username)
@@ -104,7 +104,7 @@ pub async fn get_with_username(
                 }
             };
 
-            let service_user = textsender_models::user::ServiceUser {
+            let service_user = schedtxt_models::user::ServiceUser {
                 id: row.try_get("id")?,
                 username: row.try_get("username")?,
                 passphrase: row.try_get("passphrase")?,
@@ -123,7 +123,7 @@ pub async fn get_with_username(
 
 pub async fn update_last_login(
     pool: &sqlx::PgPool,
-    service_user: &textsender_models::user::ServiceUser,
+    service_user: &schedtxt_models::user::ServiceUser,
     time: &time::OffsetDateTime,
 ) -> Result<time::OffsetDateTime, sqlx::Error> {
     let result = sqlx::query(
@@ -156,7 +156,7 @@ pub async fn update_last_login(
 
 pub async fn update_passphrase(
     pool: &sqlx::PgPool,
-    user: &textsender_models::user::ServiceUser,
+    user: &schedtxt_models::user::ServiceUser,
     updated_hashed_passphrase: &String,
 ) -> Result<(), sqlx::Error> {
     match sqlx::query(
@@ -182,7 +182,7 @@ pub async fn update_passphrase(
 
 pub async fn insert(
     pool: &sqlx::PgPool,
-    service_user: &textsender_models::user::ServiceUser,
+    service_user: &schedtxt_models::user::ServiceUser,
 ) -> Result<(uuid::Uuid, time::OffsetDateTime), sqlx::Error> {
     match sqlx::query(
         r#"INSERT INTO "service_user" (username, passphrase, salt_id)

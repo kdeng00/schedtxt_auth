@@ -54,11 +54,11 @@ pub mod init {
                 .max_age(std::time::Duration::from_secs(3600)); // Cache the preflight response for 1 hour:cite[2]
 
             // Dynamically set the allowed origin based on the environment
-            match std::env::var(textsender_models::envy::keys::APP_ENV).as_deref() {
+            match std::env::var(schedtxt_models::envy::keys::APP_ENV).as_deref() {
                 Ok("production") => {
                     let allowed_origins_env =
-                        textsender_models::envy::environment::get_allowed_origins();
-                    match textsender_models::envy::utility::delimitize(&allowed_origins_env) {
+                        schedtxt_models::envy::environment::get_allowed_origins();
+                    match schedtxt_models::envy::utility::delimitize(&allowed_origins_env) {
                         Ok(alwd) => {
                             let allowed_origins: Vec<axum::http::HeaderValue> = alwd
                                 .into_iter()

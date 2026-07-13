@@ -49,22 +49,22 @@ pub mod response {
     #[derive(Deserialize, Serialize, utoipa::ToSchema)]
     pub struct Response {
         pub message: String,
-        pub data: Vec<textsender_models::user::User>,
+        pub data: Vec<schedtxt_models::user::User>,
     }
 
     #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
     pub struct RegisterServiceUserResponse {
         pub message: String,
-        pub data: Vec<textsender_models::user::ServiceUser>,
+        pub data: Vec<schedtxt_models::user::ServiceUser>,
     }
 }
 
 pub fn generate_the_salt() -> (
     argon2::password_hash::SaltString,
-    textsender_models::user::Salt,
+    schedtxt_models::user::Salt,
 ) {
     let salt_string = hashing::generate_salt().unwrap();
-    let salt = textsender_models::user::Salt::default();
+    let salt = schedtxt_models::user::Salt::default();
     (salt_string, salt)
 }
 
@@ -102,7 +102,7 @@ pub async fn register_user(
     };
 
     if registration_enabled {
-        let mut user = textsender_models::user::User {
+        let mut user = schedtxt_models::user::User {
             username: payload.username.clone(),
             password: payload.password.clone(),
             phone_number: payload.phone_number.clone(),
@@ -181,7 +181,7 @@ pub async fn register_user(
 /// Checks to see if registration is enabled
 async fn is_registration_enabled() -> Result<bool, std::io::Error> {
     let key = String::from("ENABLE_REGISTRATION");
-    let var = textsender_models::envy::environment::get_env(&key);
+    let var = schedtxt_models::envy::environment::get_env(&key);
     let parsed_value = var.value.to_uppercase();
 
     if parsed_value == "TRUE" {
@@ -248,7 +248,7 @@ pub async fn register_service_user(
                     } else {
                         let (generate_salt, mut salt) = generate_the_salt();
                         salt.id = repo::salt::insert(&pool, &salt).await.unwrap();
-                        let mut service_user = textsender_models::user::ServiceUser {
+                        let mut service_user = schedtxt_models::user::ServiceUser {
                             username: payload.username.clone(),
                             passphrase: hashing::hash_password(&payload.passphrase, &generate_salt)
                                 .unwrap(),

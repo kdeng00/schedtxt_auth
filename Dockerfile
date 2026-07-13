@@ -17,7 +17,7 @@ COPY Cargo.toml Cargo.lock ./
 RUN --mount=type=ssh mkdir src && \
     echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs && \
     cargo build --release --quiet && \
-    rm -rf src target/release/deps/textsender_auth*
+    rm -rf src target/release/deps/schedtxt_auth*
 
 COPY src ./src
 COPY .env ./.env
@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y ca-certificates libssl-dev libssl3 && r
 
 WORKDIR /usr/local/bin
 
-COPY --from=builder /usr/src/app/target/release/textsender_auth .
+COPY --from=builder /usr/src/app/target/release/schedtxt_auth .
 
 COPY --from=builder /usr/src/app/.env .
 COPY --from=builder /usr/src/app/migrations ./migrations
@@ -41,4 +41,4 @@ COPY --from=builder /usr/src/app/migrations ./migrations
 EXPOSE 9080
 
 # Set the command to run your application
-CMD ["./textsender_auth"]
+CMD ["./schedtxt_auth"]

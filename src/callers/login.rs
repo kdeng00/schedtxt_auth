@@ -84,13 +84,13 @@ pub mod response {
     #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
     pub struct LoginResponse {
         pub message: String,
-        pub data: Vec<textsender_models::token::LoginResult>,
+        pub data: Vec<schedtxt_models::token::LoginResult>,
     }
 
     #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
     pub struct ServiceUserLoginResponse {
         pub message: String,
-        pub data: Vec<textsender_models::token::LoginResult>,
+        pub data: Vec<schedtxt_models::token::LoginResult>,
     }
 
     pub async fn extract(
@@ -114,7 +114,7 @@ pub mod response {
     #[derive(Deserialize, Serialize, utoipa::ToSchema)]
     pub struct RefreshTokenResponse {
         pub message: String,
-        pub data: Vec<textsender_models::token::LoginResult>,
+        pub data: Vec<schedtxt_models::token::LoginResult>,
     }
 
     #[derive(Deserialize, Serialize, utoipa::ToSchema)]
@@ -126,13 +126,13 @@ pub mod response {
     #[derive(Deserialize, Serialize, utoipa::ToSchema)]
     pub struct UserUpdateNameResponse {
         pub message: String,
-        pub data: Vec<textsender_models::user::User>,
+        pub data: Vec<schedtxt_models::user::User>,
     }
 
     #[derive(Default, Deserialize, Serialize, utoipa::ToSchema)]
     pub struct GetUserProfileResponse {
         pub message: String,
-        pub data: Vec<textsender_models::user::UserProfile>,
+        pub data: Vec<schedtxt_models::user::UserProfile>,
     }
 }
 
@@ -201,7 +201,7 @@ pub async fn user_login(
                             if matches {
                                 // Create token
                                 let key =
-                                    textsender_models::envy::environment::get_secret_key().value;
+                                    schedtxt_models::envy::environment::get_secret_key().value;
                                 let cst = match token_stuff::create_token(&key, &user.id) {
                                     Ok(token) => token,
                                     Err(_err) => {
@@ -225,11 +225,11 @@ pub async fn user_login(
                                         axum::http::StatusCode::OK,
                                         axum::Json(response::LoginResponse {
                                             message: String::from("Successful"),
-                                            data: vec![textsender_models::token::LoginResult {
+                                            data: vec![schedtxt_models::token::LoginResult {
                                                 user_id: user.id,
                                                 access_token: cst.access_token,
                                                 token_type: String::from(
-                                                    textsender_models::token::TOKEN_TYPE,
+                                                    schedtxt_models::token::TOKEN_TYPE,
                                                 ),
                                                 issued_at: cst.issued,
                                                 expires_in: cst.expires_in,
@@ -351,7 +351,7 @@ pub async fn service_user_login(
                                 // Create token
                                 println!("Creating token");
                                 let key =
-                                    textsender_models::envy::environment::get_secret_key().value;
+                                    schedtxt_models::envy::environment::get_secret_key().value;
                                 let cst =
                                     token_stuff::create_token(&key, &service_user.id).unwrap();
 
@@ -370,11 +370,11 @@ pub async fn service_user_login(
                                             message: String::from(
                                                 super::messages::SUCCESSFUL_MESSAGE,
                                             ),
-                                            data: vec![textsender_models::token::LoginResult {
+                                            data: vec![schedtxt_models::token::LoginResult {
                                                 user_id: service_user.id,
                                                 access_token: cst.access_token,
                                                 token_type: String::from(
-                                                    textsender_models::token::TOKEN_TYPE,
+                                                    schedtxt_models::token::TOKEN_TYPE,
                                                 ),
                                                 issued_at: cst.issued,
                                                 expires_in: cst.expires_in,
@@ -456,12 +456,12 @@ pub async fn refresh_token(
             }),
         )
     } else {
-        let key = textsender_models::envy::environment::get_secret_key().value;
+        let key = schedtxt_models::envy::environment::get_secret_key().value;
         if token_stuff::verify_token(&key, &payload.access_token) {
             match token_stuff::extract_id_from_token(&key, &payload.access_token) {
                 Ok(id) => {
                     let generate_service_token =
-                        |id, key| -> Option<textsender_models::token::CreateTokenResult> {
+                        |id, key| -> Option<schedtxt_models::token::CreateTokenResult> {
                             token_stuff::create_service_refresh_token(key, id).ok()
                         };
 
@@ -475,12 +475,12 @@ pub async fn refresh_token(
                             Some(cst) => {
                                 response.message =
                                     String::from(super::messages::SUCCESSFUL_MESSAGE);
-                                let lr = textsender_models::token::LoginResult {
+                                let lr = schedtxt_models::token::LoginResult {
                                     user_id: id,
                                     access_token: cst.access_token,
                                     issued_at: cst.issued,
                                     expires_in: cst.expires_in,
-                                    token_type: String::from(textsender_models::token::TOKEN_TYPE),
+                                    token_type: String::from(schedtxt_models::token::TOKEN_TYPE),
                                 };
                                 response.data.push(lr);
                                 (axum::http::StatusCode::OK, axum::Json(response))
@@ -500,13 +500,13 @@ pub async fn refresh_token(
                                     Some(cst) => {
                                         response.message =
                                             String::from(super::messages::SUCCESSFUL_MESSAGE);
-                                        let lr = textsender_models::token::LoginResult {
+                                        let lr = schedtxt_models::token::LoginResult {
                                             user_id: id,
                                             access_token: cst.access_token,
                                             issued_at: cst.issued,
                                             expires_in: cst.expires_in,
                                             token_type: String::from(
-                                                textsender_models::token::TOKEN_TYPE,
+                                                schedtxt_models::token::TOKEN_TYPE,
                                             ),
                                         };
                                         response.data.push(lr);
@@ -785,7 +785,7 @@ pub async fn update_name_of_user(
                             axum::http::StatusCode::OK,
                             axum::Json(response::UserUpdateNameResponse {
                                 message: String::from(super::messages::SUCCESSFUL_MESSAGE),
-                                data: vec![textsender_models::user::User {
+                                data: vec![schedtxt_models::user::User {
                                     id: user.id,
                                     phone_number: user.phone_number,
                                     firstname: payload.firstname,
@@ -844,7 +844,7 @@ pub async fn get_user_profile(
 
     match repo::user::get_with_id(&pool, &id).await {
         Ok(user) => {
-            let user_profile = textsender_models::user::UserProfile {
+            let user_profile = schedtxt_models::user::UserProfile {
                 user_id: user.id,
                 phone_number: user.phone_number,
                 firstname: user.firstname,

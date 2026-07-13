@@ -1,4 +1,4 @@
-name: textsender_auth Build
+name: schedtxt_auth Build
 
 on:
   push:
@@ -21,12 +21,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
-          chmod 600 ~/.ssh/textsender-models_deploy_key
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/schedtxt-models_deploy_key
+          chmod 600 ~/.ssh/schedtxt-models_deploy_key
           ssh-keyscan ${{ secrets.MY_HOST }} >> ~/.ssh/known_hosts
 
           eval $(ssh-agent -s)
-          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          ssh-add -v ~/.ssh/schedtxt-models_deploy_key
 
           cargo check
 
@@ -81,12 +81,12 @@ jobs:
           ENABLE_REGISTRATION: 'TRUE'
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
-          chmod 600 ~/.ssh/textsender-models_deploy_key
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/schedtxt-models_deploy_key
+          chmod 600 ~/.ssh/schedtxt-models_deploy_key
           ssh-keyscan ${{ secrets.MY_HOST }} >> ~/.ssh/known_hosts
 
           eval $(ssh-agent -s)
-          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          ssh-add -v ~/.ssh/schedtxt-models_deploy_key
 
           cargo test
 
@@ -102,12 +102,12 @@ jobs:
       - run: rustup component add rustfmt
       - run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
-          chmod 600 ~/.ssh/textsender-models_deploy_key
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/schedtxt-models_deploy_key
+          chmod 600 ~/.ssh/schedtxt-models_deploy_key
           ssh-keyscan ${{ secrets.MY_HOST }} >> ~/.ssh/known_hosts
 
           eval $(ssh-agent -s)
-          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          ssh-add -v ~/.ssh/schedtxt-models_deploy_key
           cargo fmt --all -- --check
 
   clippy:
@@ -122,12 +122,12 @@ jobs:
       - run: rustup component add clippy
       - run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
-          chmod 600 ~/.ssh/textsender-models_deploy_key
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/schedtxt-models_deploy_key
+          chmod 600 ~/.ssh/schedtxt-models_deploy_key
           ssh-keyscan ${{ secrets.MY_HOST }} >> ~/.ssh/known_hosts
 
           eval $(ssh-agent -s)
-          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          ssh-add -v ~/.ssh/schedtxt-models_deploy_key
           cargo clippy -- -D warnings
 
   build:
@@ -141,10 +141,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/textsender-models_deploy_key
-          chmod 600 ~/.ssh/textsender-models_deploy_key
+          echo "${{ secrets.MYREPO_TOKEN }}" > ~/.ssh/schedtxt-models_deploy_key
+          chmod 600 ~/.ssh/schedtxt-models_deploy_key
           ssh-keyscan ${{ secrets.MY_HOST }} >> ~/.ssh/known_hosts
 
           eval $(ssh-agent -s)
-          ssh-add -v ~/.ssh/textsender-models_deploy_key
+          ssh-add -v ~/.ssh/schedtxt-models_deploy_key
           cargo build --release

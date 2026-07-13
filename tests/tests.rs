@@ -1,7 +1,7 @@
-use textsender_auth;
-use textsender_auth::callers;
-use textsender_auth::db;
-use textsender_auth::init;
+use schedtxt_auth;
+use schedtxt_auth::callers;
+use schedtxt_auth::db;
+use schedtxt_auth::init;
 
 mod db_mgr {
     use std::str::FromStr;
@@ -9,7 +9,7 @@ mod db_mgr {
     pub const LIMIT: usize = 6;
 
     pub async fn get_pool() -> Result<sqlx::PgPool, sqlx::Error> {
-        let tm_db_url = textsender_models::envy::environment::get_db_url().value;
+        let tm_db_url = schedtxt_models::envy::environment::get_db_url().value;
         let tm_options = sqlx::postgres::PgConnectOptions::from_str(&tm_db_url).unwrap();
         sqlx::PgPool::connect_with(tm_options).await
     }
@@ -21,7 +21,7 @@ mod db_mgr {
     }
 
     pub async fn connect_to_db(db_name: &str) -> Result<sqlx::PgPool, sqlx::Error> {
-        let db_url = textsender_models::envy::environment::get_db_url().value;
+        let db_url = schedtxt_models::envy::environment::get_db_url().value;
         let options = sqlx::postgres::PgConnectOptions::from_str(&db_url)?.database(db_name);
         sqlx::PgPool::connect_with(options).await
     }
@@ -53,7 +53,7 @@ mod db_mgr {
     }
 
     pub async fn get_database_name() -> Result<String, Box<dyn std::error::Error>> {
-        let database_url = textsender_models::envy::environment::get_db_url().value;
+        let database_url = schedtxt_models::envy::environment::get_db_url().value;
 
         let parsed_url = url::Url::parse(&database_url)?;
         if parsed_url.scheme() == "postgres" || parsed_url.scheme() == "postgresql" {
@@ -231,7 +231,7 @@ pub mod requests {
         user_id: &uuid::Uuid,
     ) -> Result<axum::response::Response, axum::http::Error> {
         let url = super::util::format_url_with_value(
-            textsender_auth::callers::endpoints::GET_USER_PROFILE,
+            schedtxt_auth::callers::endpoints::GET_USER_PROFILE,
             user_id,
         );
         match axum::http::Request::builder()
@@ -308,7 +308,7 @@ mod flow {
 
     pub async fn register_user(
         app: &axum::Router,
-    ) -> Result<textsender_models::user::User, std::io::Error> {
+    ) -> Result<schedtxt_models::user::User, std::io::Error> {
         match requests::register_user(&app).await {
             Ok(response) => {
                 if axum::http::StatusCode::CREATED != response.status() {
@@ -340,7 +340,7 @@ mod flow {
         app: &axum::Router,
         username: &str,
         password: &str,
-    ) -> Result<textsender_models::token::LoginResult, std::io::Error> {
+    ) -> Result<schedtxt_models::token::LoginResult, std::io::Error> {
         match requests::login_user(&app, username, password).await {
             Ok(response) => {
                 if axum::http::StatusCode::OK != response.status() {
@@ -372,7 +372,7 @@ mod flow {
 
     pub async fn register_service_user(
         app: &axum::Router,
-    ) -> Result<textsender_models::user::ServiceUser, std::io::Error> {
+    ) -> Result<schedtxt_models::user::ServiceUser, std::io::Error> {
         match requests::register_service_user(&app).await {
             Ok(response) => {
                 if axum::http::StatusCode::CREATED != response.status() {
@@ -406,7 +406,7 @@ mod flow {
         app: &axum::Router,
         username: &str,
         passphrase: &str,
-    ) -> Result<textsender_models::token::LoginResult, std::io::Error> {
+    ) -> Result<schedtxt_models::token::LoginResult, std::io::Error> {
         match requests::login_service_user(&app, username, passphrase).await {
             Ok(response) => {
                 if axum::http::StatusCode::OK != response.status() {
@@ -439,7 +439,7 @@ mod flow {
     pub async fn refresh_token(
         app: &axum::Router,
         access_token: &str,
-    ) -> Result<textsender_models::token::LoginResult, std::io::Error> {
+    ) -> Result<schedtxt_models::token::LoginResult, std::io::Error> {
         match requests::refresh_token(app, access_token).await {
             Ok(response) => {
                 if axum::http::StatusCode::OK != response.status() {
@@ -518,7 +518,7 @@ mod flow {
         user_id: &uuid::Uuid,
         firstname: &str,
         lastname: &str,
-    ) -> Result<textsender_models::user::User, std::io::Error> {
+    ) -> Result<schedtxt_models::user::User, std::io::Error> {
         match requests::update_name_of_user(app, user_id, firstname, lastname).await {
             Ok(response) => {
                 if axum::http::StatusCode::OK != response.status() {
@@ -1063,7 +1063,7 @@ async fn test_get_user_profile() {
     match requests::get_user_profile(&app, &user_id).await {
         Ok(response) => {
             match util::convert_response::<
-                textsender_auth::callers::login::response::GetUserProfileResponse,
+                schedtxt_auth::callers::login::response::GetUserProfileResponse,
             >(response)
             .await
             {

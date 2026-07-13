@@ -12,7 +12,7 @@ pub mod user {
     pub async fn get(
         pool: &sqlx::PgPool,
         username: &String,
-    ) -> Result<textsender_models::user::User, sqlx::Error> {
+    ) -> Result<schedtxt_models::user::User, sqlx::Error> {
         let result = sqlx::query(
             r#"
         SELECT id, username, password, phone_number, salt_id, firstname, lastname, created, last_login FROM "user" WHERE username = $1
@@ -24,7 +24,7 @@ pub mod user {
 
         match result {
             Ok(r) => match r {
-                Some(r) => Ok(textsender_models::user::User {
+                Some(r) => Ok(schedtxt_models::user::User {
                     id: r.try_get("id")?,
                     username: r.try_get("username")?,
                     password: r.try_get("password")?,
@@ -44,7 +44,7 @@ pub mod user {
     pub async fn get_with_id(
         pool: &sqlx::PgPool,
         id: &uuid::Uuid,
-    ) -> Result<textsender_models::user::User, sqlx::Error> {
+    ) -> Result<schedtxt_models::user::User, sqlx::Error> {
         match sqlx::query(
             r#"
         SELECT id, username, password, phone_number, salt_id, firstname, lastname, created, last_login FROM "user" WHERE id = $1
@@ -54,7 +54,7 @@ pub mod user {
         .fetch_optional(pool)
         .await {
             Ok(r) => match r {
-                Some(r) => Ok(textsender_models::user::User {
+                Some(r) => Ok(schedtxt_models::user::User {
                     id: r.try_get("id")?,
                     username: r.try_get("username")?,
                     password: r.try_get("password")?,
@@ -73,7 +73,7 @@ pub mod user {
 
     pub async fn update_last_login(
         pool: &sqlx::PgPool,
-        user: &textsender_models::user::User,
+        user: &schedtxt_models::user::User,
         time: &time::OffsetDateTime,
     ) -> Result<time::OffsetDateTime, sqlx::Error> {
         let result = sqlx::query(
@@ -106,7 +106,7 @@ pub mod user {
 
     pub async fn update_password(
         pool: &sqlx::PgPool,
-        user: &textsender_models::user::User,
+        user: &schedtxt_models::user::User,
         updated_hashed_password: &String,
     ) -> Result<(), sqlx::Error> {
         match sqlx::query(
@@ -189,7 +189,7 @@ pub mod user {
 
     pub async fn insert(
         pool: &sqlx::PgPool,
-        user: &textsender_models::user::User,
+        user: &schedtxt_models::user::User,
     ) -> Result<(uuid::Uuid, std::option::Option<time::OffsetDateTime>), sqlx::Error> {
         let row = sqlx::query(
             r#"
@@ -237,7 +237,7 @@ pub mod salt {
     pub async fn get(
         pool: &sqlx::PgPool,
         id: &uuid::Uuid,
-    ) -> Result<textsender_models::user::Salt, sqlx::Error> {
+    ) -> Result<schedtxt_models::user::Salt, sqlx::Error> {
         let result = sqlx::query(
             r#"
         SELECT id, salt FROM "salt" WHERE id = $1
@@ -249,7 +249,7 @@ pub mod salt {
 
         match result {
             Ok(r) => match r {
-                Some(r) => Ok(textsender_models::user::Salt {
+                Some(r) => Ok(schedtxt_models::user::Salt {
                     id: r.try_get("id")?,
                     salt: r.try_get("salt")?,
                 }),
@@ -261,7 +261,7 @@ pub mod salt {
 
     pub async fn insert(
         pool: &sqlx::PgPool,
-        salt: &textsender_models::user::Salt,
+        salt: &schedtxt_models::user::Salt,
     ) -> Result<uuid::Uuid, sqlx::Error> {
         let row = sqlx::query(
             r#"

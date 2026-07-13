@@ -8,8 +8,8 @@ use time;
 
 pub const KEY_ENV: &str = "SECRET_KEY";
 pub const MESSAGE: &str = "Something random";
-pub const ISSUER: &str = "textsender_auth";
-pub const AUDIENCE: &str = "textsender";
+pub const ISSUER: &str = "schedtxt_auth";
+pub const AUDIENCE: &str = "schedtxt";
 
 pub fn get_expiration(issued: &time::OffsetDateTime) -> Result<time::OffsetDateTime, time::Error> {
     let duration_expire = time::Duration::hours(4);
@@ -19,40 +19,40 @@ pub fn get_expiration(issued: &time::OffsetDateTime) -> Result<time::OffsetDateT
 pub fn create_token(
     provided_key: &str,
     id: &uuid::Uuid,
-) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
-    let resource = textsender_models::token::TokenResource {
+) -> Result<schedtxt_models::token::CreateTokenResult, josekit::JoseError> {
+    let resource = schedtxt_models::token::TokenResource {
         message: String::from(MESSAGE),
         issuer: String::from(ISSUER),
         audiences: vec![String::from(AUDIENCE)],
         user_id: *id,
     };
-    textsender_models::token::create_token(provided_key, resource, time::Duration::hours(4))
+    schedtxt_models::token::create_token(provided_key, resource, time::Duration::hours(4))
 }
 
 pub fn create_service_token(
     provided: &str,
     id: &uuid::Uuid,
-) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
-    let resource = textsender_models::token::TokenResource {
+) -> Result<schedtxt_models::token::CreateTokenResult, josekit::JoseError> {
+    let resource = schedtxt_models::token::TokenResource {
         message: String::from(SERVICE_SUBJECT),
         issuer: String::from(ISSUER),
         audiences: vec![String::from(AUDIENCE)],
         user_id: *id,
     };
-    textsender_models::token::create_token(provided, resource, time::Duration::hours(1))
+    schedtxt_models::token::create_token(provided, resource, time::Duration::hours(1))
 }
 
 pub fn create_service_refresh_token(
     key: &str,
     id: &uuid::Uuid,
-) -> Result<textsender_models::token::CreateTokenResult, josekit::JoseError> {
-    let resource = textsender_models::token::TokenResource {
+) -> Result<schedtxt_models::token::CreateTokenResult, josekit::JoseError> {
+    let resource = schedtxt_models::token::TokenResource {
         message: String::from(SERVICE_SUBJECT),
         issuer: String::from(ISSUER),
         audiences: vec![String::from(AUDIENCE)],
         user_id: *id,
     };
-    textsender_models::token::create_token(key, resource, time::Duration::hours(4))
+    schedtxt_models::token::create_token(key, resource, time::Duration::hours(4))
 }
 
 pub fn verify_token(key: &str, token: &str) -> bool {
@@ -78,9 +78,9 @@ pub fn extract_id_from_token(key: &str, token: &str) -> Result<uuid::Uuid, std::
     }
 }
 
-pub const APP_TOKEN_TYPE: &str = "Textsender_App";
+pub const APP_TOKEN_TYPE: &str = "Schedtxt_App";
 pub const APP_SUBJECT: &str = "Something random";
-pub const SERVICE_TOKEN_TYPE: &str = "Textsender_Service";
+pub const SERVICE_TOKEN_TYPE: &str = "Schedtxt_Service";
 pub const SERVICE_SUBJECT: &str = "Service random";
 
 pub fn get_token_type(key: &str, token: &str) -> Result<String, std::io::Error> {
@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_tokenize() {
-        let special_key = textsender_models::envy::environment::get_secret_key();
+        let special_key = schedtxt_models::envy::environment::get_secret_key();
         let id = uuid::Uuid::new_v4();
         match create_token(&special_key.value, &id) {
             Ok(cst) => {

@@ -5,7 +5,7 @@ services:
     build:
       context: .
       ssh: ["default"]
-    container_name: textsender_auth
+    container_name: schedtxt_auth
     ports:
       - "9080:9080"
     env_file:
@@ -18,11 +18,11 @@ services:
   # PostgreSQL Database Service
   auth_db:
     image: postgres:18.4-alpine
-    container_name: textsender_auth_db
+    container_name: schedtxt_auth_db
     environment:
-      POSTGRES_USER: ${DB_AUTH_USER:-textsender_op}
+      POSTGRES_USER: ${DB_AUTH_USER:-schedtxt_op}
       POSTGRES_PASSWORD: ${DB_AUTH_PASSWORD:-password}
-      POSTGRES_DB: ${DB_AUTH_NAME:-textsender_auth_db}
+      POSTGRES_DB: ${DB_AUTH_NAME:-schedtxt_auth_db}
     volumes:
       # Persist database data using a named volume
       - postgres_data:/var/lib/postgresql
