@@ -1,4 +1,8 @@
-# Getting started
+# schedtxt_auth
+Auth API for `schedtxt` project.
+
+
+## Getting started
 Quickest way to get started is with docker, make sure that it is installed. Copy over
 the `.env.docker.sample` file and name it `.env`.
 
